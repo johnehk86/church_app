@@ -243,19 +243,25 @@ const BusinessPage = {
             </h3>
             <div class="form-group">
               <label class="form-label">주소</label>
-              <input class="form-input" name="address" value="${Utils.escapeHtml(s.address || '')}" placeholder="매장 주소">
+              <div style="display:flex;gap:8px;align-items:flex-end">
+                <input class="form-input" name="address" value="${Utils.escapeHtml(s.address || '')}" placeholder="매장 주소를 입력하세요" style="flex:1">
+                <button type="button" class="btn btn--primary btn--small" onclick="BusinessPage.findCoords()" id="find-coords-btn" style="width:auto;white-space:nowrap;flex-shrink:0;margin-bottom:2px">
+                  <span class="material-symbols-outlined" style="font-size:16px">search</span> 좌표 찾기
+                </button>
+              </div>
             </div>
+            <div id="coords-result"></div>
             <div style="display:flex;gap:12px">
               <div class="form-group" style="flex:1">
                 <label class="form-label">위도</label>
-                <input class="form-input" name="lat" type="number" step="any" value="${s.location?.lat || ''}" placeholder="37.5665">
+                <input class="form-input" name="lat" type="number" step="any" value="${s.location?.lat || ''}" placeholder="자동 입력됩니다">
               </div>
               <div class="form-group" style="flex:1">
                 <label class="form-label">경도</label>
-                <input class="form-input" name="lng" type="number" step="any" value="${s.location?.lng || ''}" placeholder="126.9780">
+                <input class="form-input" name="lng" type="number" step="any" value="${s.location?.lng || ''}" placeholder="자동 입력됩니다">
               </div>
             </div>
-            <p class="editor-hint">네이버 지도에서 매장 검색 후 좌표를 입력하세요</p>
+            <p class="editor-hint">주소 입력 후 "좌표 찾기"를 누르면 자동으로 위도/경도가 입력됩니다</p>
           </div>
 
           <!-- ===== 9. 운영시간 ===== -->
@@ -412,6 +418,79 @@ const BusinessPage = {
       this._facilities = this._facilities.filter(f => f.icon !== icon);
       el.classList.remove('facility-check--active');
     }
+  },
+
+  // --- 주소 → 좌표 자동 변환 ---
+  async findCoords() {
+    const form = document.getElementById('store-form');
+    const address = form.address.value.trim();
+    const btn = document.getElementById('find-coords-btn');
+    const resultEl = document.getElementById('coords-result');
+
+    if (!address) {
+      Toast.show('주소를 먼저 입력해주세요.', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="loading-spinner" style="width:16px;height:16px;border-width:2px"></div>';
+    resultEl.innerHTML = '';
+
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=5&countrycodes=kr`,
+        { headers: { 'Accept-Language': 'ko' } }
+      );
+      const results = await res.json();
+
+      if (results.length === 0) {
+        resultEl.innerHTML = `
+          <div style="padding:12px;background:var(--surface-container);border-radius:8px;margin-bottom:12px">
+            <p style="font-size:0.8125rem;color:var(--error)">주소를 찾을 수 없습니다. 더 자세한 주소를 입력해보세요.</p>
+          </div>`;
+      } else if (results.length === 1) {
+        // 결과가 하나면 바로 적용
+        form.lat.value = parseFloat(results[0].lat).toFixed(6);
+        form.lng.value = parseFloat(results[0].lon).toFixed(6);
+        resultEl.innerHTML = `
+          <div style="padding:12px;background:#f0f8f0;border-radius:8px;margin-bottom:12px">
+            <p style="font-size:0.8125rem;color:var(--success);font-weight:600">좌표를 찾았습니다!</p>
+            <p style="font-size:0.8125rem;color:var(--secondary);margin-top:4px">${Utils.escapeHtml(results[0].display_name)}</p>
+          </div>`;
+      } else {
+        // 여러 결과면 선택
+        resultEl.innerHTML = `
+          <div style="padding:12px;background:var(--surface-container);border-radius:8px;margin-bottom:12px">
+            <p style="font-size:0.8125rem;font-weight:600;margin-bottom:8px">검색 결과에서 선택하세요:</p>
+            ${results.map((r, i) => `
+              <button type="button" onclick="BusinessPage.selectCoords(${r.lat}, ${r.lon}, '${Utils.escapeHtml(r.display_name).replace(/'/g, "\\'")}')"
+                      style="display:block;width:100%;text-align:left;padding:10px;margin-bottom:4px;border:1px solid var(--outline-variant);border-radius:8px;background:white;cursor:pointer;font-size:0.8125rem;color:var(--on-surface)">
+                ${Utils.escapeHtml(r.display_name)}
+              </button>
+            `).join('')}
+          </div>`;
+      }
+    } catch (e) {
+      console.error('좌표 검색 실패:', e);
+      resultEl.innerHTML = `
+        <div style="padding:12px;background:var(--surface-container);border-radius:8px;margin-bottom:12px">
+          <p style="font-size:0.8125rem;color:var(--error)">좌표 검색에 실패했습니다. 다시 시도해주세요.</p>
+        </div>`;
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">search</span> 좌표 찾기';
+  },
+
+  selectCoords(lat, lon, displayName) {
+    const form = document.getElementById('store-form');
+    form.lat.value = parseFloat(lat).toFixed(6);
+    form.lng.value = parseFloat(lon).toFixed(6);
+    document.getElementById('coords-result').innerHTML = `
+      <div style="padding:12px;background:#f0f8f0;border-radius:8px;margin-bottom:12px">
+        <p style="font-size:0.8125rem;color:var(--success);font-weight:600">좌표가 입력되었습니다!</p>
+        <p style="font-size:0.8125rem;color:var(--secondary);margin-top:4px">${displayName}</p>
+      </div>`;
   },
 
   // --- 저장 ---
