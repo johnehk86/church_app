@@ -1343,6 +1343,124 @@ input, textarea, select {
   font-weight: 500;
 }
 
+/* --- 에디터 (사장님 매장관리) --- */
+.editor-section {
+  margin-bottom: 32px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--surface-container);
+}
+
+.editor-section:last-of-type {
+  border-bottom: none;
+}
+
+.editor-section__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 16px;
+}
+
+.editor-section__title .material-symbols-outlined {
+  font-size: 20px;
+  color: var(--accent);
+}
+
+.editor-hint {
+  font-size: 0.8125rem;
+  color: var(--secondary);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+/* 메뉴 편집 아이템 */
+.menu-edit-item {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 14px;
+  background: var(--surface-container);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+}
+
+.menu-edit-item__fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.menu-edit-item__fields .form-input {
+  padding: 8px 0;
+  font-size: 0.875rem;
+}
+
+.btn--icon-remove {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--error);
+  opacity: 0.6;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  transition: all 0.2s;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.btn--icon-remove:hover {
+  opacity: 1;
+  background: rgba(186, 26, 26, 0.08);
+}
+
+/* 시설 체크박스 그리드 */
+.facility-check-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.facility-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-variant);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: var(--secondary);
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.facility-check input[type="checkbox"] {
+  display: none;
+}
+
+.facility-check--active {
+  border-color: var(--accent);
+  background: rgba(139, 115, 85, 0.06);
+  color: var(--on-surface);
+}
+
+.facility-check .material-symbols-outlined {
+  color: var(--outline);
+}
+
+.facility-check--active .material-symbols-outlined {
+  color: var(--accent);
+}
+
 /* --- 반응형 --- */
 @media (min-width: 768px) {
   .page {
