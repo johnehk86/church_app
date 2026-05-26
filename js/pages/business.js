@@ -110,7 +110,7 @@ const BusinessPage = {
       return `
         <label class="facility-check ${isChecked ? 'facility-check--active' : ''}">
           <input type="checkbox" ${isChecked ? 'checked' : ''}
-                 onchange="BusinessPage.toggleFacility('${opt.icon}', '${opt.label}', this.checked)">
+                 onchange="BusinessPage.toggleFacility('${opt.icon}', '${opt.label}', this.checked, this.parentElement)">
           <span class="material-symbols-outlined" style="font-size:16px">${opt.icon}</span>
           <span>${opt.label}</span>
         </label>
@@ -353,13 +353,15 @@ const BusinessPage = {
   },
 
   // --- 시설 ---
-  toggleFacility(icon, label, checked) {
+  toggleFacility(icon, label, checked, el) {
     if (checked) {
       if (!this._facilities.some(f => f.icon === icon)) {
         this._facilities.push({ icon, label });
       }
+      el.classList.add('facility-check--active');
     } else {
       this._facilities = this._facilities.filter(f => f.icon !== icon);
+      el.classList.remove('facility-check--active');
     }
   },
 
