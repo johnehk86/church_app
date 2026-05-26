@@ -5,12 +5,13 @@
  * Firebase Console > 프로젝트 설정 > 일반 > 내 앱 > 웹 앱
  */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.firebasestorage.app",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDjHWSHndQ2sHLC2VWlcfTu1ZaQ1nAQ7YM",
+  authDomain: "churchstore-8d483.firebaseapp.com",
+  projectId: "churchstore-8d483",
+  storageBucket: "churchstore-8d483.firebasestorage.app",
+  messagingSenderId: "97533674211",
+  appId: "1:97533674211:web:c42496f6d9383b7ac4fbd6",
+  measurementId: "G-BW500PYHBH"
 };
 
 firebase.initializeApp(firebaseConfig);
