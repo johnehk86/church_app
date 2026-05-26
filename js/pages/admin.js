@@ -16,6 +16,10 @@ const AdminPage = {
           </button>
         </div>
         <div id="admin-content"><div class="loading-screen"><div class="loading-spinner"></div></div></div>
+        <div class="divider"></div>
+        <button class="btn btn--ghost" onclick="AuthService.signOut()" style="width:100%">
+          <span class="material-symbols-outlined" style="font-size:18px">logout</span> Sign Out
+        </button>
       </div>`;
 
     if (this._activeTab === 'users') await this._loadUsers();
