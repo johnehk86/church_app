@@ -33,12 +33,19 @@ const BusinessPage = {
     { icon: "support_agent", label: "사후 관리" }
   ],
 
-  render(container) {
+  render(container, params) {
     const user = AuthService.getCurrentUser();
     if (!user) { App.navigate('#/login'); return; }
 
-    // 기존 매장 로드
-    this._store = StoreService.getByOwnerId(user.id);
+    const role = AuthService.getUserRole();
+    const editStoreId = params && params[0]; // 마스터가 특정 매장 편집 시
+
+    // 매장 로드: 마스터가 edit-store/ID로 접근 시 해당 매장, 아니면 본인 매장
+    if (editStoreId && role === 'master') {
+      this._store = StoreService.getById(editStoreId);
+    } else {
+      this._store = StoreService.getByOwnerId(user.id);
+    }
     this._isNew = !this._store;
 
     if (this._isNew) {
@@ -375,7 +382,7 @@ const BusinessPage = {
     const cleanMenu = this._menuItems.filter(m => m.name.trim());
 
     const storeData = {
-      ownerId: user.id,
+      ownerId: this._store.ownerId || user.id,
       name: form.name.value.trim(),
       category: form.category.value,
       description: form.description.value.trim(),

@@ -10,8 +10,9 @@ const App = {
     'login':    { page: LoginPage,    title: '로그인',          nav: 'my',    needsAuth: false },
     'store':    { page: DetailPage,   title: '매장 상세',       nav: 'home',  needsAuth: false },
     'map':      { page: MapPage,      title: '지도',            nav: 'map',   needsAuth: false },
-    'my-store': { page: BusinessPage, title: '내 매장 관리',    nav: 'my',    needsAuth: true, roles: ['business', 'master'] },
-    'admin':    { page: AdminPage,    title: '관리자',          nav: 'my',    needsAuth: true, roles: ['master'] },
+    'my-store':   { page: BusinessPage, title: '내 매장 관리',    nav: 'my',    needsAuth: true, roles: ['business', 'master'] },
+    'edit-store': { page: BusinessPage, title: '매장 수정',      nav: 'my',    needsAuth: true, roles: ['master'] },
+    'admin':      { page: AdminPage,    title: '관리자',          nav: 'my',    needsAuth: true, roles: ['master'] },
   },
 
   init() {

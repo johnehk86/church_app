@@ -79,7 +79,10 @@ const AdminPage = {
               ${Utils.escapeHtml(store.ownerName || '')} | ${Utils.escapeHtml(store.category || '')}
             </div>
           </div>
-          <button class="btn btn--danger btn--small" onclick="AdminPage.deleteStore('${store.id}', '${Utils.escapeHtml(store.name).replace(/'/g, "\\'")}')">삭제</button>
+          <div style="display:flex;gap:4px">
+            <button class="btn btn--secondary btn--small" onclick="App.navigate('#/edit-store/${store.id}')">수정</button>
+            <button class="btn btn--danger btn--small" onclick="AdminPage.deleteStore('${store.id}', '${Utils.escapeHtml(store.name).replace(/'/g, "\\'")}')">삭제</button>
+          </div>
         </div>
       `).join('')}
     `;
