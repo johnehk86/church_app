@@ -85,6 +85,13 @@ const LoginPage = {
               <label class="form-label">비밀번호 ${isSignup ? '(6자 이상)' : ''}</label>
               <input class="form-input" name="password" type="password" placeholder="비밀번호 입력" required ${isSignup ? 'minlength="6"' : ''}>
             </div>
+            ${isSignup ? `
+              <div class="form-group" style="text-align:left">
+                <label class="form-label">사업자 코드 (선택)</label>
+                <input class="form-input" name="bizCode" placeholder="사장님만 입력하세요">
+                <p style="font-size:0.75rem;color:var(--secondary);margin-top:4px">사장님은 관리자에게 받은 코드를 입력하세요. 일반 성도는 비워두세요.</p>
+              </div>
+            ` : ''}
             <button type="submit" class="btn btn--primary">
               ${isSignup ? 'Create Account' : 'Sign In'}
             </button>
@@ -112,7 +119,8 @@ const LoginPage = {
 
     if (this._mode === 'signup') {
       const name = form.name.value.trim();
-      if (await AuthService.signUp(email, password, name)) App.navigate('#/');
+      const bizCode = form.bizCode?.value.trim() || '';
+      if (await AuthService.signUp(email, password, name, bizCode)) App.navigate('#/');
     } else {
       if (await AuthService.signIn(email, password)) App.navigate('#/');
     }

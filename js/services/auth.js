@@ -31,11 +31,21 @@ const AuthService = {
       if (doc.exists) {
         this._userData = doc.data();
       } else {
-        // 첫 로그인 - 사용자 문서 자동 생성
+        // 첫 Google 로그인 - 사업자 코드 입력 기회 제공
+        let role = 'member';
+        const bizCode = prompt('사장님이시면 사업자 코드를 입력하세요.\n일반 성도는 그냥 취소를 누르세요.');
+        if (bizCode) {
+          if (bizCode === this.BUSINESS_SECRET_CODE) {
+            role = 'business';
+            Toast.show('사장님 가입 완료!', 'success');
+          } else {
+            Toast.show('사업자 코드가 올바르지 않습니다. 일반 성도로 가입됩니다.', 'error');
+          }
+        }
         const newUser = {
           email: this._currentUser.email || '',
           name: this._currentUser.displayName || '성도',
-          role: 'member',
+          role,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         await db.collection('users').doc(uid).set(newUser);
@@ -104,20 +114,33 @@ const AuthService = {
     }
   },
 
+  // 사업자 시크릿 코드 (마스터가 변경 가능)
+  BUSINESS_SECRET_CODE: 'church2024',
+
   // --- 이메일/비밀번호 회원가입 ---
-  async signUp(email, password, name) {
+  async signUp(email, password, name, bizCode) {
     try {
+      // 사업자 코드 확인
+      let role = 'member';
+      if (bizCode) {
+        if (bizCode === this.BUSINESS_SECRET_CODE) {
+          role = 'business';
+        } else {
+          Toast.show('사업자 코드가 올바르지 않습니다.', 'error');
+          return false;
+        }
+      }
+
       const result = await auth.createUserWithEmailAndPassword(email, password);
       await result.user.updateProfile({ displayName: name });
-      // Firestore 사용자 문서 생성
       await db.collection('users').doc(result.user.uid).set({
         email,
         name,
-        role: 'member',
+        role,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      this._userData = { email, name, role: 'member' };
-      Toast.show('가입이 완료되었습니다!', 'success');
+      this._userData = { email, name, role };
+      Toast.show(role === 'business' ? '사장님 가입이 완료되었습니다!' : '가입이 완료되었습니다!', 'success');
       return true;
     } catch (e) {
       console.error('회원가입 실패:', e);
