@@ -7,12 +7,7 @@ const BottomNav = {
     const user = AuthService.getCurrentUser();
     const role = AuthService.getUserRole();
 
-    let myPageHash = '#/login';
-    if (user) {
-      if (role === 'master') myPageHash = '#/admin';
-      else if (role === 'business') myPageHash = '#/my-store';
-      else myPageHash = '#/login';
-    }
+    const myPageHash = '#/login';
 
     nav.innerHTML = `
       <nav class="bottom-nav">
