@@ -6,21 +6,18 @@ const App = {
   currentRoute: '',
 
   routes: {
-    '':         { page: HomePage,     title: '우리교회 상점',    nav: 'home',  needsAuth: false },
-    'login':    { page: LoginPage,    title: '로그인',          nav: 'my',    needsAuth: false },
-    'store':    { page: DetailPage,   title: '매장 상세',       nav: 'home',  needsAuth: false },
-    'map':      { page: MapPage,      title: '지도',            nav: 'map',   needsAuth: false },
+    '':           { page: HomePage,     title: '우리교회 상점',    nav: 'home',  needsAuth: false },
+    'login':      { page: LoginPage,    title: '로그인',          nav: 'my',    needsAuth: false },
+    'store':      { page: DetailPage,   title: '매장 상세',       nav: 'home',  needsAuth: false },
+    'map':        { page: MapPage,      title: '지도',            nav: 'map',   needsAuth: false },
     'my-store':   { page: BusinessPage, title: '내 매장 관리',    nav: 'my',    needsAuth: true, roles: ['business', 'master'] },
-    'edit-store': { page: BusinessPage, title: '매장 수정',      nav: 'my',    needsAuth: true, roles: ['master'] },
+    'edit-store': { page: BusinessPage, title: '매장 수정',       nav: 'my',    needsAuth: true, roles: ['master'] },
     'admin':      { page: AdminPage,    title: '관리자',          nav: 'my',    needsAuth: true, roles: ['master'] },
   },
 
-  init() {
-    // 데모 데이터 초기화
-    DB.seedDemoData();
-
-    // 인증 상태 복원
-    AuthService.init();
+  async init() {
+    // Firebase 인증 초기화 (로그인 상태 확인까지 대기)
+    await AuthService.init();
 
     // 해시 변경 감지
     window.addEventListener('hashchange', () => this.navigate());
@@ -74,31 +71,30 @@ const App = {
 
     this.currentRoute = route;
 
-    // 헤더 렌더링
+    // 헤더
     const showBack = route !== '' && route !== 'map';
     Header.render(routeConfig.title, showBack);
 
-    // 하단 네비 렌더링
+    // 하단 네비
     BottomNav.render(routeConfig.nav);
 
     // 페이지 전환
     const content = document.getElementById('app-content');
     content.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>';
 
-    // 이전 페이지 정리
     if (this.currentPage && this.currentPage.destroy) {
       this.currentPage.destroy();
     }
     this.currentPage = routeConfig.page;
 
-    // 약간의 딜레이로 로딩 애니메이션 표시
+    // 비동기 페이지 렌더링
     setTimeout(() => {
       routeConfig.page.render(content, params);
     }, 50);
   }
 };
 
-// 토스트 유틸
+// 토스트
 const Toast = {
   show(message, type = 'info') {
     const container = document.getElementById('toast-container');
@@ -110,7 +106,7 @@ const Toast = {
   }
 };
 
-// 유틸 함수들
+// 유틸
 const Utils = {
   categories: [
     '전체', '음식점', '카페', '미용/뷰티', '의료/건강',
@@ -134,7 +130,8 @@ const Utils = {
 
   formatDate(timestamp) {
     if (!timestamp) return '';
-    return new Date(timestamp).toLocaleDateString('ko-KR');
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString('ko-KR');
   }
 };
 

@@ -12,10 +12,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700;900&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-
-  <!-- Leaflet.js (무료 지도, API 키 불필요) -->
+  <!-- Leaflet.js -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Firebase SDK (compat - script 태그로 바로 사용) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -37,7 +42,8 @@
   <div id="toast-container"></div>
 
   <!-- 앱 스크립트 -->
-  <script src="js/services/db.js"></script>
+  <script src="js/config/firebase.js"></script>
+  <script src="js/services/storage.js"></script>
   <script src="js/services/auth.js"></script>
   <script src="js/services/store.js"></script>
   <script src="js/components/header.js"></script>

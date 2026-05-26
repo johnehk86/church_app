@@ -1,19 +1,36 @@
 /**
- * 매장 서비스 - LocalStorage 기반
+ * Firestore 매장 서비스
  */
 const StoreService = {
-  getAll() {
-    return DB.getAllStores();
+  _cache: null,
+  _cacheTime: 0,
+  CACHE_TTL: 15000, // 15초 캐시
+
+  // 전체 매장 (캐시 활용)
+  async getAll() {
+    const now = Date.now();
+    if (this._cache && (now - this._cacheTime) < this.CACHE_TTL) {
+      return this._cache;
+    }
+    try {
+      const snapshot = await db.collection('stores').orderBy('createdAt', 'desc').get();
+      this._cache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      this._cacheTime = now;
+      return this._cache;
+    } catch (e) {
+      console.error('매장 목록 실패:', e);
+      return this._cache || [];
+    }
   },
 
-  getByCategory(category) {
-    const all = this.getAll();
+  async getByCategory(category) {
+    const all = await this.getAll();
     if (!category || category === '전체') return all;
     return all.filter(s => s.category === category);
   },
 
-  search(query) {
-    const all = this.getAll();
+  async search(query) {
+    const all = await this.getAll();
     const q = query.toLowerCase();
     return all.filter(s =>
       (s.name && s.name.toLowerCase().includes(q)) ||
@@ -23,35 +40,70 @@ const StoreService = {
     );
   },
 
-  getById(storeId) {
-    return DB.getStore(storeId);
+  async getById(storeId) {
+    // 캐시에서 먼저 찾기
+    if (this._cache) {
+      const found = this._cache.find(s => s.id === storeId);
+      if (found) return found;
+    }
+    try {
+      const doc = await db.collection('stores').doc(storeId).get();
+      return doc.exists ? { id: doc.id, ...doc.data() } : null;
+    } catch (e) {
+      console.error('매장 조회 실패:', e);
+      return null;
+    }
   },
 
-  getByOwnerId(ownerId) {
-    const all = this.getAll();
-    return all.find(s => s.ownerId === ownerId) || null;
+  async getByOwnerId(ownerId) {
+    try {
+      const snapshot = await db.collection('stores').where('ownerId', '==', ownerId).get();
+      if (!snapshot.empty) {
+        const doc = snapshot.docs[0];
+        return { id: doc.id, ...doc.data() };
+      }
+      return null;
+    } catch (e) {
+      console.error('내 매장 조회 실패:', e);
+      return null;
+    }
   },
 
-  create(storeData) {
-    const id = DB.generateId();
-    DB.saveStore(id, {
-      ...storeData,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    });
-    return id;
+  async create(storeData) {
+    try {
+      const docRef = await db.collection('stores').add({
+        ...storeData,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      this._cache = null;
+      return docRef.id;
+    } catch (e) {
+      console.error('매장 생성 실패:', e);
+      throw e;
+    }
   },
 
-  update(storeId, storeData) {
-    const existing = DB.getStore(storeId);
-    DB.saveStore(storeId, {
-      ...existing,
-      ...storeData,
-      updatedAt: Date.now()
-    });
+  async update(storeId, storeData) {
+    try {
+      await db.collection('stores').doc(storeId).update({
+        ...storeData,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      this._cache = null;
+    } catch (e) {
+      console.error('매장 수정 실패:', e);
+      throw e;
+    }
   },
 
-  delete(storeId) {
-    DB.deleteStore(storeId);
+  async delete(storeId) {
+    try {
+      await db.collection('stores').doc(storeId).delete();
+      this._cache = null;
+    } catch (e) {
+      console.error('매장 삭제 실패:', e);
+      throw e;
+    }
   }
 };

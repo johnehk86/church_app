@@ -33,18 +33,18 @@ const BusinessPage = {
     { icon: "support_agent", label: "사후 관리" }
   ],
 
-  render(container, params) {
+  async render(container, params) {
     const user = AuthService.getCurrentUser();
     if (!user) { App.navigate('#/login'); return; }
 
     const role = AuthService.getUserRole();
-    const editStoreId = params && params[0]; // 마스터가 특정 매장 편집 시
+    const editStoreId = params && params[0];
 
-    // 매장 로드: 마스터가 edit-store/ID로 접근 시 해당 매장, 아니면 본인 매장
+    // 매장 로드 (비동기)
     if (editStoreId && role === 'master') {
-      this._store = StoreService.getById(editStoreId);
+      this._store = await StoreService.getById(editStoreId);
     } else {
-      this._store = StoreService.getByOwnerId(user.id);
+      this._store = await StoreService.getByOwnerId(user.id);
     }
     this._isNew = !this._store;
 
@@ -373,50 +373,78 @@ const BusinessPage = {
   },
 
   // --- 저장 ---
-  onSubmit(event) {
+  async onSubmit(event) {
     event.preventDefault();
     const form = document.getElementById('store-form');
+    const btn = document.getElementById('submit-btn');
     const user = AuthService.getCurrentUser();
 
-    // 빈 메뉴 항목 제거
-    const cleanMenu = this._menuItems.filter(m => m.name.trim());
+    btn.disabled = true;
+    btn.innerHTML = '<div class="loading-spinner" style="width:20px;height:20px;border-width:2px"></div> 저장 중...';
 
-    const storeData = {
-      ownerId: this._store.ownerId || user.id,
-      name: form.name.value.trim(),
-      category: form.category.value,
-      description: form.description.value.trim(),
-      address: form.address.value.trim(),
-      location: {
-        lat: parseFloat(form.lat.value) || null,
-        lng: parseFloat(form.lng.value) || null
-      },
-      hours: form.hours.value.trim(),
-      contact: {
-        phone: form.phone.value.trim(),
-        kakao: form.kakao.value.trim(),
-        instagram: form.instagram.value.trim()
-      },
-      photos: this._photoDataUrls,
-      ownerName: form.ownerName.value.trim(),
-      ownerPhoto: this._store.ownerPhoto || '',
-      ownerMessage: form.ownerMessage.value.trim(),
-      memberBenefit: form.memberBenefit.value.trim(),
-      menuTitle: form.menuTitle.value.trim(),
-      menu: cleanMenu,
-      facilities: this._facilities,
-      interiorPhotos: this._interiorPhotos
-    };
+    try {
+      const storeOwnerId = this._store.ownerId || user.id;
 
-    if (this._isNew) {
-      StoreService.create(storeData);
-      Toast.show('매장이 등록되었습니다!', 'success');
-    } else {
-      StoreService.update(this._store.id, storeData);
-      Toast.show('저장되었습니다!', 'success');
+      // 대표 사진 업로드 (새 dataURL만 Firebase Storage에 업로드)
+      const uploadedPhotos = await StorageService.uploadPhotos(
+        this._photoDataUrls, `stores/${storeOwnerId}/main`
+      );
+
+      // 인테리어 사진 업로드
+      const uploadedInterior = [];
+      for (const photo of this._interiorPhotos) {
+        if (photo.url.startsWith('data:')) {
+          const url = await StorageService.upload(photo.url, `stores/${storeOwnerId}/interior`);
+          uploadedInterior.push({ url, caption: photo.caption });
+        } else {
+          uploadedInterior.push(photo);
+        }
+      }
+
+      const cleanMenu = this._menuItems.filter(m => m.name.trim());
+
+      const storeData = {
+        ownerId: storeOwnerId,
+        name: form.name.value.trim(),
+        category: form.category.value,
+        description: form.description.value.trim(),
+        address: form.address.value.trim(),
+        location: {
+          lat: parseFloat(form.lat.value) || null,
+          lng: parseFloat(form.lng.value) || null
+        },
+        hours: form.hours.value.trim(),
+        contact: {
+          phone: form.phone.value.trim(),
+          kakao: form.kakao.value.trim(),
+          instagram: form.instagram.value.trim()
+        },
+        photos: uploadedPhotos,
+        ownerName: form.ownerName.value.trim(),
+        ownerPhoto: this._store.ownerPhoto || '',
+        ownerMessage: form.ownerMessage.value.trim(),
+        memberBenefit: form.memberBenefit.value.trim(),
+        menuTitle: form.menuTitle.value.trim(),
+        menu: cleanMenu,
+        facilities: this._facilities,
+        interiorPhotos: uploadedInterior
+      };
+
+      if (this._isNew) {
+        await StoreService.create(storeData);
+        Toast.show('매장이 등록되었습니다!', 'success');
+      } else {
+        await StoreService.update(this._store.id, storeData);
+        Toast.show('저장되었습니다!', 'success');
+      }
+
+      App.navigate('#/');
+    } catch (e) {
+      console.error('저장 실패:', e);
+      Toast.show('저장에 실패했습니다. 다시 시도해주세요.', 'error');
+      btn.disabled = false;
+      btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px">save</span> ${this._isNew ? '매장 등록하기' : '저장하기'}`;
     }
-
-    App.navigate('#/');
   },
 
   destroy() {
