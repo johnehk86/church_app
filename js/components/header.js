@@ -18,7 +18,7 @@ const Header = {
       ? `<button class="app-header__back" onclick="history.back()">
            <span class="material-symbols-outlined">arrow_back</span>
          </button>`
-      : '<div style="width:40px"></div>';
+      : `<img src="assets/icons/church-logo.png" alt="" style="width:32px;height:32px;object-fit:contain">`;
 
     header.innerHTML = `
       <div class="app-header">
