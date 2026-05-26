@@ -58,11 +58,14 @@ const AdminPage = {
     const el = document.getElementById('admin-content');
     if (!el) return;
     if (stores.length === 0) {
-      el.innerHTML = `<div class="empty-state"><span class="material-symbols-outlined" style="font-size:3rem;opacity:0.3">storefront</span><h3 class="empty-state__title">등록된 매장이 없습니다</h3></div>`;
+      el.innerHTML = `<div class="empty-state"><span class="material-symbols-outlined" style="font-size:3rem;opacity:0.3">storefront</span><h3 class="empty-state__title">등록된 매장이 없습니다</h3><button class="btn btn--primary btn--small" onclick="App.navigate('#/my-store')" style="margin-top:16px;width:auto"><span class="material-symbols-outlined" style="font-size:18px">add</span> 새 매장 등록</button></div>`;
       return;
     }
     el.innerHTML = `
-      <p style="font-size:0.8125rem;color:var(--secondary);margin-bottom:12px">총 ${stores.length}개</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <p style="font-size:0.8125rem;color:var(--secondary)">총 ${stores.length}개</p>
+        <button class="btn btn--primary btn--small" onclick="App.navigate('#/my-store')" style="width:auto"><span class="material-symbols-outlined" style="font-size:16px">add</span> 새 매장</button>
+      </div>
       ${stores.map(store => `
         <div class="user-list-item">
           <div class="user-list-item__info" style="cursor:pointer" onclick="App.navigate('#/store/${store.id}')">
