@@ -299,6 +299,49 @@ const BusinessPage = {
     `;
   },
 
+  // --- 폼 값 저장/복원 (사진 추가 시 입력값 유지) ---
+  _saveFormValues() {
+    const form = document.getElementById('store-form');
+    if (!form) return;
+    this._formCache = {
+      name: form.name?.value || '',
+      category: form.category?.value || '',
+      description: form.description?.value || '',
+      ownerName: form.ownerName?.value || '',
+      ownerMessage: form.ownerMessage?.value || '',
+      memberBenefit: form.memberBenefit?.value || '',
+      menuTitle: form.menuTitle?.value || '',
+      address: form.address?.value || '',
+      lat: form.lat?.value || '',
+      lng: form.lng?.value || '',
+      hours: form.hours?.value || '',
+      phone: form.phone?.value || '',
+      kakao: form.kakao?.value || '',
+      instagram: form.instagram?.value || ''
+    };
+  },
+
+  _restoreFormValues() {
+    if (!this._formCache) return;
+    const form = document.getElementById('store-form');
+    if (!form) return;
+    Object.keys(this._formCache).forEach(key => {
+      if (form[key]) form[key].value = this._formCache[key];
+    });
+  },
+
+  _reRenderForm() {
+    this._saveFormValues();
+    // _store에 캐시된 폼 값 반영
+    if (this._formCache) {
+      this._store = { ...this._store, ...this._formCache,
+        contact: { phone: this._formCache.phone, kakao: this._formCache.kakao, instagram: this._formCache.instagram },
+        location: { lat: this._formCache.lat, lng: this._formCache.lng }
+      };
+    }
+    this._renderForm(document.getElementById('app-content'));
+  },
+
   // --- 대표 사진 ---
   onMainPhotoSelect(event) {
     Array.from(event.target.files).forEach(file => {
@@ -306,7 +349,7 @@ const BusinessPage = {
       const reader = new FileReader();
       reader.onload = (e) => {
         this._photoDataUrls.push(e.target.result);
-        this._renderForm(document.getElementById('app-content'));
+        this._reRenderForm();
       };
       reader.readAsDataURL(file);
     });
@@ -314,7 +357,7 @@ const BusinessPage = {
 
   removeMainPhoto(i) {
     this._photoDataUrls.splice(i, 1);
-    this._renderForm(document.getElementById('app-content'));
+    this._reRenderForm();
   },
 
   // --- 인테리어 사진 ---
@@ -324,7 +367,7 @@ const BusinessPage = {
       const reader = new FileReader();
       reader.onload = (e) => {
         this._interiorPhotos.push({ url: e.target.result, caption: '' });
-        this._renderForm(document.getElementById('app-content'));
+        this._reRenderForm();
       };
       reader.readAsDataURL(file);
     });
@@ -332,7 +375,7 @@ const BusinessPage = {
 
   removeInteriorPhoto(i) {
     this._interiorPhotos.splice(i, 1);
-    this._renderForm(document.getElementById('app-content'));
+    this._reRenderForm();
   },
 
   updateInteriorCaption(i, value) {
@@ -342,8 +385,7 @@ const BusinessPage = {
   // --- 메뉴 ---
   addMenu() {
     this._menuItems.push({ name: '', desc: '', price: '' });
-    this._renderForm(document.getElementById('app-content'));
-    // 스크롤을 메뉴 섹션으로
+    this._reRenderForm();
     setTimeout(() => {
       const items = document.querySelectorAll('.menu-edit-item');
       if (items.length) items[items.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -352,7 +394,7 @@ const BusinessPage = {
 
   removeMenu(i) {
     this._menuItems.splice(i, 1);
-    this._renderForm(document.getElementById('app-content'));
+    this._reRenderForm();
   },
 
   updateMenu(i, field, value) {
