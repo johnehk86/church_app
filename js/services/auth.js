@@ -2,10 +2,11 @@
  * Firebase Authentication 서비스
  */
 const AuthService = {
-  _currentUser: null,  // Firebase User
-  _userData: null,     // Firestore 사용자 데이터 (role 등)
+  _currentUser: null,
+  _userData: null,
   _ready: false,
   _readyCallbacks: [],
+  _signingUp: false,  // 회원가입 중 중복 팝업 방지
 
   init() {
     return new Promise((resolve) => {
@@ -30,7 +31,7 @@ const AuthService = {
       const doc = await db.collection('users').doc(uid).get();
       if (doc.exists) {
         this._userData = doc.data();
-      } else {
+      } else if (!this._signingUp) {
         // 첫 Google 로그인 - 사업자 코드 입력 기회 제공
         let role = 'member';
         const bizCode = prompt('사장님이시면 사업자 코드를 입력하세요.\n일반 성도는 그냥 취소를 누르세요.');
@@ -131,6 +132,7 @@ const AuthService = {
         }
       }
 
+      this._signingUp = true;
       const result = await auth.createUserWithEmailAndPassword(email, password);
       await result.user.updateProfile({ displayName: name });
       await db.collection('users').doc(result.user.uid).set({
@@ -140,6 +142,7 @@ const AuthService = {
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       this._userData = { email, name, role };
+      this._signingUp = false;
       Toast.show(role === 'business' ? '사장님 가입이 완료되었습니다!' : '가입이 완료되었습니다!', 'success');
       return true;
     } catch (e) {
