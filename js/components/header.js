@@ -18,12 +18,18 @@ const Header = {
       ? `<button class="app-header__back" onclick="history.back()">
            <span class="material-symbols-outlined">arrow_back</span>
          </button>`
-      : `<img src="assets/icons/church-logo.png" alt="" style="width:32px;height:32px;object-fit:contain">`;
+      : '<div style="width:40px"></div>';
+
+    const logoInTitle = !showBack
+      ? `<img src="assets/icons/church-logo.png" alt="" style="width:30px;height:30px;object-fit:contain;margin-right:8px">`
+      : '';
 
     header.innerHTML = `
       <div class="app-header">
         ${leftAction}
-        <h1 class="app-header__title">${Utils.escapeHtml(title)}</h1>
+        <h1 class="app-header__title" style="display:flex;align-items:center;justify-content:center">
+          ${logoInTitle}${Utils.escapeHtml(title)}
+        </h1>
         ${rightAction}
       </div>
     `;
