@@ -110,14 +110,15 @@ const Toast = {
 const Utils = {
   categories: [
     '전체', '음식점', '카페', '미용/뷰티', '의료/건강',
-    '교육', '생활서비스', '패션/잡화', '자동차', '부동산', '기타'
+    '교육', '생활서비스', '패션/잡화', '안경/광학', '자동차', '부동산', '기타'
   ],
 
   categoryIcons: {
     '전체': 'apps', '음식점': 'restaurant', '카페': 'coffee',
     '미용/뷰티': 'spa', '의료/건강': 'local_hospital',
     '교육': 'school', '생활서비스': 'handyman',
-    '패션/잡화': 'checkroom', '자동차': 'directions_car',
+    '패션/잡화': 'checkroom', '안경/광학': 'visibility',
+    '자동차': 'directions_car',
     '부동산': 'apartment', '기타': 'storefront'
   },
 
