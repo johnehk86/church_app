@@ -6,7 +6,7 @@ const App = {
   currentRoute: '',
 
   routes: {
-    '':           { page: HomePage,     title: '우리교회 상점',    nav: 'home',  needsAuth: false },
+    '':           { page: HomePage,     title: '수원하나교회 상점',  nav: 'home',  needsAuth: false },
     'login':      { page: LoginPage,    title: '로그인',          nav: 'my',    needsAuth: false },
     'store':      { page: DetailPage,   title: '매장 상세',       nav: 'home',  needsAuth: false },
     'map':        { page: MapPage,      title: '지도',            nav: 'map',   needsAuth: false },

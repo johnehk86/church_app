@@ -52,8 +52,10 @@ const LoginPage = {
 
     container.innerHTML = `
       <div class="page login-page">
-        <div class="login-page__logo" style="font-family:var(--font-display);letter-spacing:0.05em">C</div>
-        <h2 class="login-page__title">우리교회 상점</h2>
+        <div class="login-page__logo" style="padding:0;background:none">
+          <img src="assets/icons/church-logo.png" alt="수원하나교회" style="width:80px;height:80px;object-fit:contain">
+        </div>
+        <h2 class="login-page__title">수원하나교회 상점</h2>
         <p class="login-page__subtitle">${isSignup ? '새 계정을 만들어보세요' : '로그인하여 더 많은 기능을 이용하세요'}</p>
 
         <div class="login-buttons" style="max-width:320px">

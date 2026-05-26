@@ -1,7 +1,7 @@
 {
-  "name": "우리교회 상점 디렉토리",
-  "short_name": "교회상점",
-  "description": "교회 성도들의 매장을 쉽게 찾아보세요",
+  "name": "수원하나교회 상점 디렉토리",
+  "short_name": "하나교회상점",
+  "description": "수원하나교회 성도들의 매장을 쉽게 찾아보세요",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fbf9f9",
