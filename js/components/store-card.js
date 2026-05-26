@@ -47,12 +47,10 @@ const StoreCard = {
           ${imageContent}
           <div class="store-card__overlay"></div>
         </div>
-        <div class="store-card__glass-label">
-          <span>${Utils.escapeHtml(store.name)}</span>
-        </div>
+        <div class="store-card__overlay"></div>
         <div class="store-card__info">
           <div class="store-card__category">${Utils.escapeHtml(store.category || '기타')}</div>
-          <p class="store-card__desc">${Utils.escapeHtml((store.description || '').substring(0, 40))}${(store.description || '').length > 40 ? '...' : ''}</p>
+          <h3 class="store-card__name">${Utils.escapeHtml(store.name)}</h3>
         </div>
       </div>
     `;
