@@ -30,6 +30,13 @@ const HomePage = {
         <div id="store-list">
           <div class="loading-screen"><div class="loading-spinner"></div></div>
         </div>
+
+        <!-- 앱 설치 배너 -->
+        <div style="margin-top:32px;padding:20px;background:linear-gradient(135deg,var(--primary),#333);border-radius:16px;text-align:center;cursor:pointer" onclick="App.navigate('#/install')">
+          <span class="material-symbols-outlined" style="font-size:2rem;color:white;margin-bottom:8px">install_mobile</span>
+          <p style="color:white;font-weight:600;font-size:0.9375rem">앱으로 설치하기</p>
+          <p style="color:rgba(255,255,255,0.7);font-size:0.8125rem;margin-top:4px">홈 화면에 추가하면 더 빠르게!</p>
+        </div>
       </div>
     `;
 
