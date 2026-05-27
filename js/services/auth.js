@@ -35,8 +35,7 @@ const AuthService = {
           this._ready = true;
           resolve();
         } else if (user && wasLoggedOut) {
-          // 로그인 상태 변경 감지 (리다이렉트 복귀 시)
-          Toast.show('로그인 성공!', 'success');
+          // 로그인 상태 변경 감지 → 화면만 갱신 (토스트는 signIn에서 처리)
           App.navigate('#/');
         }
       });
@@ -110,8 +109,9 @@ const AuthService = {
       App.navigate('#/');
     }).catch(function(e) {
       console.error('Google 로그인 실패:', e);
-      // 디버그용: 실제 에러 메시지 표시
-      Toast.show('에러: ' + e.code + ' - ' + e.message, 'error');
+      if (e.code !== 'auth/popup-closed-by-user') {
+        Toast.show('로그인에 실패했습니다.', 'error');
+      }
     });
   },
 
