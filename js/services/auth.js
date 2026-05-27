@@ -116,7 +116,7 @@ const AuthService = {
   },
 
   // 사업자 시크릿 코드 (마스터가 변경 가능)
-  BUSINESS_SECRET_CODE: 'church2024',
+  BUSINESS_SECRET_CODE: '0316',
 
   // --- 이메일/비밀번호 회원가입 ---
   async signUp(email, password, name, bizCode) {
