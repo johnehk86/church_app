@@ -2,21 +2,25 @@
   "name": "수원하나교회 상점 디렉토리",
   "short_name": "하나교회상점",
   "description": "수원하나교회 성도들의 매장을 쉽게 찾아보세요",
-  "start_url": "/",
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone",
   "background_color": "#fbf9f9",
-  "theme_color": "#fbf9f9",
+  "theme_color": "#1a1a1a",
   "orientation": "portrait",
+  "id": "/",
   "icons": [
     {
       "src": "assets/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "assets/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
