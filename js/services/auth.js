@@ -22,16 +22,23 @@ const AuthService = {
       }
 
       auth.onAuthStateChanged(async (user) => {
+        const wasLoggedOut = !this._currentUser;
         this._currentUser = user;
         if (user) {
           await this._loadUserData(user.uid);
         } else {
           this._userData = null;
         }
-        this._ready = true;
-        this._readyCallbacks.forEach(cb => cb());
-        this._readyCallbacks = [];
-        resolve();
+
+        if (!this._ready) {
+          // 첫 초기화
+          this._ready = true;
+          resolve();
+        } else if (user && wasLoggedOut) {
+          // 로그인 상태 변경 감지 (리다이렉트 복귀 시)
+          Toast.show('로그인 성공!', 'success');
+          App.navigate('#/');
+        }
       });
     });
   },
@@ -96,25 +103,16 @@ const AuthService = {
   },
 
   // --- Google 로그인 ---
-  async signInWithGoogle() {
+  signInWithGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
-    // 모바일 감지: 무조건 리다이렉트 (팝업은 모바일에서 차단됨)
-    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isMobile) {
-      auth.signInWithRedirect(provider);
-      return;
-    }
-    // PC: 팝업
-    try {
-      await auth.signInWithPopup(provider);
+    auth.signInWithPopup(provider).then(function(result) {
       Toast.show('로그인 성공!', 'success');
       App.navigate('#/');
-    } catch (e) {
+    }).catch(function(e) {
       console.error('Google 로그인 실패:', e);
-      if (e.code !== 'auth/popup-closed-by-user') {
-        Toast.show('로그인에 실패했습니다.', 'error');
-      }
-    }
+      // 디버그용: 실제 에러 메시지 표시
+      Toast.show('에러: ' + e.code + ' - ' + e.message, 'error');
+    });
   },
 
   // --- 이메일/비밀번호 로그인 ---
