@@ -35,8 +35,9 @@ const AuthService = {
           this._ready = true;
           resolve();
         } else if (user && wasLoggedOut) {
-          // 로그인 상태 변경 감지 → 화면만 갱신 (토스트는 signIn에서 처리)
-          App.navigate('#/');
+          // 로그인 상태 변경 감지 → 홈으로 이동
+          window.location.hash = '#/';
+          App.navigate();
         }
       });
     });
