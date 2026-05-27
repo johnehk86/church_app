@@ -37,7 +37,7 @@ const AuthService = {
         let role = 'member';
         const bizCode = prompt('사장님이시면 사업자 코드를 입력하세요.\n일반 성도는 그냥 취소를 누르세요.');
         if (bizCode) {
-          if (bizCode === this.BUSINESS_SECRET_CODE) {
+          if (bizCode.trim() === '0316') {
             role = 'business';
             Toast.show('사장님 가입 완료!', 'success');
           } else {
@@ -122,7 +122,7 @@ const AuthService = {
       // 사업자 코드 확인
       let role = 'member';
       if (bizCode) {
-        if (bizCode === this.BUSINESS_SECRET_CODE) {
+        if (bizCode.trim() === '0316') {
           role = 'business';
         } else {
           Toast.show('사업자 코드가 올바르지 않습니다.', 'error');
