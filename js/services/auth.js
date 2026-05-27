@@ -6,7 +6,8 @@ const AuthService = {
   _userData: null,
   _ready: false,
   _readyCallbacks: [],
-  _signingUp: false,  // 회원가입 중 중복 팝업 방지
+  _signingUp: false,
+  BUSINESS_SECRET_CODE: '0316',
 
   init() {
     return new Promise((resolve) => {
@@ -114,9 +115,6 @@ const AuthService = {
       return false;
     }
   },
-
-  // 사업자 시크릿 코드 (마스터가 변경 가능)
-  BUSINESS_SECRET_CODE: '0316',
 
   // --- 이메일/비밀번호 회원가입 ---
   async signUp(email, password, name, bizCode) {
