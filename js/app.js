@@ -21,7 +21,7 @@ const App = {
     try {
       await Promise.race([
         AuthService.init(),
-        new Promise((_, reject) => setTimeout(() => reject('timeout'), 5000))
+        new Promise((_, reject) => setTimeout(() => reject('timeout'), 10000))
       ]);
     } catch (e) {
       console.warn('Auth 초기화 지연 또는 실패:', e);

@@ -13,9 +13,12 @@ const AuthService = {
     return new Promise(async (resolve) => {
       // 모바일 리다이렉트 로그인 결과 처리
       try {
-        await auth.getRedirectResult();
+        const result = await auth.getRedirectResult();
+        if (result && result.user) {
+          console.log('리다이렉트 로그인 성공:', result.user.email);
+        }
       } catch (e) {
-        console.warn('리다이렉트 결과 처리:', e);
+        console.warn('리다이렉트 결과:', e.code || e);
       }
 
       auth.onAuthStateChanged(async (user) => {
