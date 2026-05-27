@@ -17,8 +17,15 @@ const App = {
   },
 
   async init() {
-    // Firebase 인증 초기화 (로그인 상태 확인까지 대기)
-    await AuthService.init();
+    // Firebase 인증 초기화 (타임아웃 5초 - 실패해도 앱은 동작)
+    try {
+      await Promise.race([
+        AuthService.init(),
+        new Promise((_, reject) => setTimeout(() => reject('timeout'), 5000))
+      ]);
+    } catch (e) {
+      console.warn('Auth 초기화 지연 또는 실패:', e);
+    }
 
     // 해시 변경 감지
     window.addEventListener('hashchange', () => this.navigate());
