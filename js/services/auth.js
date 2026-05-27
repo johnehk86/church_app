@@ -89,12 +89,18 @@ const AuthService = {
   async signInWithGoogle() {
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
-      await auth.signInWithPopup(provider);
-      Toast.show('로그인 성공!', 'success');
-      App.navigate('#/');
+      // 모바일은 리다이렉트, PC는 팝업
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        await auth.signInWithRedirect(provider);
+      } else {
+        await auth.signInWithPopup(provider);
+        Toast.show('로그인 성공!', 'success');
+        App.navigate('#/');
+      }
     } catch (e) {
       console.error('Google 로그인 실패:', e);
-      if (e.code !== 'auth/popup-closed-by-user') {
+      if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/popup-blocked') {
         Toast.show('로그인에 실패했습니다.', 'error');
       }
     }
