@@ -94,20 +94,25 @@ const AuthService = {
 
   // --- Google 로그인 ---
   async signInWithGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
     try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      // 모바일은 리다이렉트, PC는 팝업
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile) {
-        await auth.signInWithRedirect(provider);
-      } else {
-        await auth.signInWithPopup(provider);
-        Toast.show('로그인 성공!', 'success');
-        App.navigate('#/');
-      }
+      // 팝업 먼저 시도
+      await auth.signInWithPopup(provider);
+      Toast.show('로그인 성공!', 'success');
+      App.navigate('#/');
     } catch (e) {
-      console.error('Google 로그인 실패:', e);
-      if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/popup-blocked') {
+      console.error('Google 팝업 로그인 실패:', e);
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+        // 팝업 차단 시 리다이렉트로 전환
+        try {
+          await auth.signInWithRedirect(provider);
+        } catch (e2) {
+          console.error('Google 리다이렉트 실패:', e2);
+          Toast.show('로그인에 실패했습니다.', 'error');
+        }
+      } else if (e.code === 'auth/unauthorized-domain') {
+        Toast.show('이 도메인에서 로그인이 허용되지 않습니다.', 'error');
+      } else {
         Toast.show('로그인에 실패했습니다.', 'error');
       }
     }
