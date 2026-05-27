@@ -42,6 +42,9 @@ const LoginPage = {
           <button class="btn btn--ghost" onclick="AuthService.signOut()" style="margin-top:8px">
             Sign Out
           </button>
+          <button class="btn btn--ghost" onclick="AuthService.deleteAccount()" style="margin-top:4px;color:var(--error);font-size:0.8125rem">
+            회원탈퇴
+          </button>
         </div>
       </div>
     `;

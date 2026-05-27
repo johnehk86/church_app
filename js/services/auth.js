@@ -161,6 +161,41 @@ const AuthService = {
     App.navigate('#/');
   },
 
+  // --- 회원탈퇴 ---
+  async deleteAccount() {
+    if (!confirm('정말 탈퇴하시겠습니까?\n모든 데이터가 삭제되며 되돌릴 수 없습니다.')) return;
+
+    try {
+      const uid = this._currentUser.uid;
+
+      // 사업자인 경우 매장 데이터도 삭제
+      const storeSnapshot = await db.collection('stores').where('ownerId', '==', uid).get();
+      for (const doc of storeSnapshot.docs) {
+        await doc.ref.delete();
+      }
+
+      // Firestore 사용자 문서 삭제
+      await db.collection('users').doc(uid).delete();
+
+      // Firebase Auth 계정 삭제
+      await this._currentUser.delete();
+
+      this._userData = null;
+      this._currentUser = null;
+      Toast.show('탈퇴가 완료되었습니다.', 'info');
+      App.navigate('#/');
+    } catch (e) {
+      console.error('회원탈퇴 실패:', e);
+      if (e.code === 'auth/requires-recent-login') {
+        Toast.show('보안을 위해 다시 로그인 후 탈퇴해주세요.', 'error');
+        await auth.signOut();
+        App.navigate('#/login');
+      } else {
+        Toast.show('탈퇴에 실패했습니다.', 'error');
+      }
+    }
+  },
+
   // --- 역할 변경 (마스터 전용) ---
   async updateUserRole(userId, newRole) {
     if (this.getUserRole() !== 'master') {
