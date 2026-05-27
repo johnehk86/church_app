@@ -10,7 +10,14 @@ const AuthService = {
   BUSINESS_SECRET_CODE: '0316',
 
   init() {
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
+      // 모바일 리다이렉트 로그인 결과 처리
+      try {
+        await auth.getRedirectResult();
+      } catch (e) {
+        console.warn('리다이렉트 결과 처리:', e);
+      }
+
       auth.onAuthStateChanged(async (user) => {
         this._currentUser = user;
         if (user) {
