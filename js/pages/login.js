@@ -102,6 +102,11 @@ const LoginPage = {
             </button>
           </form>
 
+          ${!isSignup ? `
+            <button type="button" class="btn btn--ghost" onclick="LoginPage.resetPassword()" style="font-size:0.8125rem;color:var(--secondary)">
+              비밀번호를 잊으셨나요?
+            </button>
+          ` : ''}
           <button type="button" class="btn btn--ghost" onclick="LoginPage.toggleMode()">
             ${isSignup ? '이미 계정이 있으신가요? 로그인' : '계정이 없으신가요? 회원가입'}
           </button>
@@ -128,6 +133,19 @@ const LoginPage = {
       if (await AuthService.signUp(email, password, name, bizCode)) App.navigate('#/');
     } else {
       if (await AuthService.signIn(email, password)) App.navigate('#/');
+    }
+  },
+
+  async resetPassword() {
+    const email = prompt('비밀번호를 재설정할 이메일을 입력하세요');
+    if (!email) return;
+    try {
+      await auth.sendPasswordResetEmail(email.trim());
+      Toast.show('비밀번호 재설정 메일을 보냈습니다. 이메일을 확인하세요!', 'success');
+    } catch (e) {
+      if (e.code === 'auth/user-not-found') Toast.show('등록되지 않은 이메일입니다.', 'error');
+      else if (e.code === 'auth/invalid-email') Toast.show('올바른 이메일 형식이 아닙니다.', 'error');
+      else Toast.show('메일 발송에 실패했습니다.', 'error');
     }
   },
 
