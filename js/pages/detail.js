@@ -75,19 +75,16 @@ const DetailPage = {
     container.innerHTML = `
       <div class="page">
         <div class="detail-hero"><div class="detail-slider" id="detail-slider">${photos}</div>${dots}${photoCounter}</div>
-        <div class="detail-section" style="padding:16px 16px 12px">
-          <p style="font-size:0.8125rem;font-weight:700;color:var(--primary);margin-bottom:4px">${Utils.escapeHtml(store.category || '기타')}</p>
-          <h2 style="font-size:1.5rem;font-weight:700;color:var(--on-surface)">${Utils.escapeHtml(store.name)}</h2>
-        </div>
+        <div style="margin-bottom:20px"><p class="label-caps" style="color:var(--accent);margin-bottom:8px">${Utils.escapeHtml(store.category || '기타')}</p><h2 style="font-family:var(--font-display);font-size:1.75rem;font-weight:600">${Utils.escapeHtml(store.name)}</h2></div>
         ${benefitSection}
-        <div class="detail-section"><div class="detail-owner"><div class="detail-owner__photo">${store.ownerPhoto ? `<img src="${Utils.escapeHtml(store.ownerPhoto)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : `<span class="material-symbols-outlined" style="font-size:1.5rem;color:var(--outline)">person</span>`}</div><div><div class="detail-owner__name">${Utils.escapeHtml(store.ownerName || '')}</div><div class="detail-owner__label">사장님</div></div></div></div>
+        <div class="detail-section"><div class="detail-owner"><div class="detail-owner__photo">${store.ownerPhoto ? `<img src="${Utils.escapeHtml(store.ownerPhoto)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : `<span class="material-symbols-outlined" style="font-size:1.5rem;color:var(--outline)">person</span>`}</div><div><div class="detail-owner__name">${Utils.escapeHtml(store.ownerName || '')}</div><div class="detail-owner__label">Owner</div></div></div></div>
         ${ownerMessageSection}
-        ${store.description ? `<div class="detail-section"><h3 class="detail-section__title">매장 소개</h3><p style="font-size:0.9375rem;line-height:1.8;color:var(--on-surface-variant);white-space:pre-line">${Utils.escapeHtml(store.description)}</p></div>` : ''}
+        ${store.description ? `<div class="detail-section"><h3 class="detail-section__title"><span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">info</span>About</h3><p style="font-size:0.9375rem;line-height:1.8;color:var(--on-surface-variant);white-space:pre-line">${Utils.escapeHtml(store.description)}</p></div>` : ''}
         ${menuSection}${facilitiesSection}${gallerySection}
-        <div class="detail-section"><h3 class="detail-section__title">연락처 및 위치</h3>${contactRows.join('')}</div>
+        <div class="detail-section"><h3 class="detail-section__title"><span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">contact_phone</span>Contact & Info</h3>${contactRows.join('')}</div>
         <div class="detail-actions">
-          ${store.contact?.phone ? `<a href="tel:${Utils.escapeHtml(store.contact.phone)}" class="btn btn--primary"><span class="material-symbols-outlined" style="font-size:18px">call</span> 전화하기</a>` : ''}
-          ${store.location?.lat ? `<button class="btn btn--secondary" onclick="DetailPage.openNaverMap()"><span class="material-symbols-outlined" style="font-size:18px">directions</span> 길찾기</button>` : ''}
+          ${store.contact?.phone ? `<a href="tel:${Utils.escapeHtml(store.contact.phone)}" class="btn btn--primary"><span class="material-symbols-outlined" style="font-size:18px">call</span> Call</a>` : ''}
+          ${store.location?.lat ? `<button class="btn btn--secondary" onclick="DetailPage.openNaverMap()"><span class="material-symbols-outlined" style="font-size:18px">directions</span> Navigate</button>` : ''}
         </div>
       </div>`;
     this._initSlider();
