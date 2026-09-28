@@ -126,12 +126,14 @@ const BusinessPage = {
 
     container.innerHTML = `
       <div class="page">
-        <h2 style="font-family:var(--font-display);font-size:1.5rem;font-weight:600;margin-bottom:8px">
-          ${this._isNew ? 'New Store' : 'Edit Store'}
-        </h2>
-        <p style="font-size:0.875rem;color:var(--secondary);margin-bottom:28px">
-          ${this._isNew ? '매장 정보를 입력하고 등록하세요' : '매장 정보를 자유롭게 수정하세요'}
-        </p>
+        <div style="padding:16px 16px 0;background:white;border-bottom:1px solid var(--outline-variant)">
+          <h2 style="font-size:1.25rem;font-weight:700;margin-bottom:4px">
+            ${this._isNew ? '매장 등록' : '매장 수정'}
+          </h2>
+          <p style="font-size:0.875rem;color:var(--secondary);margin-bottom:16px">
+            ${this._isNew ? '매장 정보를 입력하고 등록하세요' : '매장 정보를 자유롭게 수정하세요'}
+          </p>
+        </div>
 
         <form id="store-form" onsubmit="BusinessPage.onSubmit(event)">
 
@@ -294,7 +296,7 @@ const BusinessPage = {
           </div>
 
           <!-- 저장 버튼 -->
-          <div style="margin-top:32px;padding-bottom:20px">
+          <div style="padding-bottom:20px">
             <button type="submit" class="btn btn--primary" id="submit-btn">
               <span class="material-symbols-outlined" style="font-size:18px">save</span>
               ${this._isNew ? '매장 등록하기' : '저장하기'}
