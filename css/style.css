@@ -15,13 +15,13 @@
 
 /* --- CSS 변수 (Yelp 팔레트) --- */
 :root {
-  --primary: #1D4ED8;
-  --primary-dark: #1A3FB5;
-  --primary-light: #EFF6FF;
+  --primary: #D32323;
+  --primary-dark: #B01B1B;
+  --primary-light: #FFF0F0;
 
   --secondary: #666666;
-  --accent: #1D4ED8;
-  --accent-light: #BFDBFE;
+  --accent: #D32323;
+  --accent-light: #FFCCCC;
 
   --surface: #FFFFFF;
   --surface-dim: #F5F5F5;
@@ -34,7 +34,7 @@
   --outline: #999999;
   --outline-variant: #E8E8E8;
 
-  --error: #DC2626;
+  --error: #D32323;
   --success: #2D6A4F;
   --star: #F5A623;
 
