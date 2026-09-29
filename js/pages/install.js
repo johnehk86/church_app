@@ -2,15 +2,63 @@
  * 앱 설치 가이드 페이지
  */
 const InstallPage = {
+  _detect() {
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isAndroid = /Android/.test(ua);
+    const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua) && !/CriOS/.test(ua);
+    const isChrome = /Chrome/.test(ua) && !/Edg/.test(ua) && !/OPR/.test(ua);
+    const isChromeIOS = /CriOS/.test(ua);
+    return { isIOS, isAndroid, isSafari, isChrome, isChromeIOS };
+  },
+
   render(container) {
+    const { isIOS, isAndroid, isSafari, isChrome, isChromeIOS } = this._detect();
+
+    // 브라우저 안내 배너
+    let browserBanner = '';
+    if (isIOS && !isSafari) {
+      browserBanner = `
+        <div style="background:linear-gradient(135deg,#1a1a1a,#333);border-radius:16px;padding:20px;margin-bottom:24px;text-align:center">
+          <span class="material-symbols-outlined" style="font-size:2rem;color:#fff;margin-bottom:8px;display:block">warning</span>
+          <p style="color:white;font-weight:600;font-size:0.9375rem;margin-bottom:4px">사파리(Safari)에서 열어주세요</p>
+          <p style="color:rgba(255,255,255,0.7);font-size:0.8125rem;margin-bottom:16px">아이폰은 사파리에서만 홈 화면 추가가 가능합니다</p>
+          <button onclick="InstallPage.copyLink()" class="btn btn--primary" style="background:white;color:#1a1a1a;font-weight:700">
+            <span class="material-symbols-outlined" style="font-size:16px">content_copy</span> 주소 복사 후 사파리에서 열기
+          </button>
+        </div>`;
+    } else if (isAndroid && !isChrome) {
+      browserBanner = `
+        <div style="background:linear-gradient(135deg,#1a57c8,#1a3a8f);border-radius:16px;padding:20px;margin-bottom:24px;text-align:center">
+          <span class="material-symbols-outlined" style="font-size:2rem;color:#fff;margin-bottom:8px;display:block">open_in_new</span>
+          <p style="color:white;font-weight:600;font-size:0.9375rem;margin-bottom:4px">크롬(Chrome)으로 열어주세요</p>
+          <p style="color:rgba(255,255,255,0.7);font-size:0.8125rem;margin-bottom:16px">안드로이드는 크롬에서 홈 화면 추가가 가능합니다</p>
+          <a href="intent://hana-store.com#Intent;scheme=https;package=com.android.chrome;end"
+             class="btn btn--primary" style="background:white;color:#1a3a8f;font-weight:700;display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+            <span class="material-symbols-outlined" style="font-size:16px">open_in_new</span> 크롬으로 열기
+          </a>
+        </div>`;
+    } else if ((isIOS && isSafari) || (isAndroid && isChrome)) {
+      browserBanner = `
+        <div style="background:linear-gradient(135deg,#2e7d32,#1b5e20);border-radius:16px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;gap:12px">
+          <span class="material-symbols-outlined" style="font-size:2rem;color:#fff;flex-shrink:0">check_circle</span>
+          <div>
+            <p style="color:white;font-weight:600;font-size:0.9375rem">${isIOS ? '사파리' : '크롬'}로 접속 중 ✓</p>
+            <p style="color:rgba(255,255,255,0.8);font-size:0.8125rem">아래 안내에 따라 설치하세요</p>
+          </div>
+        </div>`;
+    }
+
     container.innerHTML = `
       <div class="page" style="max-width:480px">
         <!-- 로고 -->
-        <div style="text-align:center;margin-bottom:32px">
-          <img src="assets/icons/church-logo.png" alt="수원하나교회 상점" style="width:80px;height:80px;margin:0 auto 16px">
+        <div style="text-align:center;margin-bottom:24px">
+          <img src="assets/icons/church-logo.png" alt="수원하나교회 상점" style="width:80px;height:80px;margin:0 auto 16px;mix-blend-mode:multiply">
           <h2 style="font-family:var(--font-display);font-size:1.5rem;font-weight:600">앱 설치하기</h2>
           <p style="font-size:0.875rem;color:var(--secondary);margin-top:8px">홈 화면에 추가하면 앱처럼 사용할 수 있어요!</p>
         </div>
+
+        ${browserBanner}
 
         <!-- QR 코드 -->
         <div class="install-section">
