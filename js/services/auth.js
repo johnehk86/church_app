@@ -105,6 +105,7 @@ const AuthService = {
   // --- Google 로그인 ---
   signInWithGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
     auth.signInWithPopup(provider).then(function(result) {
       Toast.show('로그인 성공!', 'success');
       App.navigate('#/');
