@@ -24,13 +24,20 @@ const DetailPage = {
 
     // 쿠폰 로드
     const user = AuthService.getCurrentUser();
-    const activeCoupons = await CouponService.getActiveByStore(storeId);
-    this._coupons = activeCoupons;
+    let activeCoupons = [];
     const claimedSet = new Set();
-    if (user && activeCoupons.length > 0) {
-      await Promise.all(activeCoupons.map(async c => {
-        if (await CouponService.hasClaimed(c.id, user.id)) claimedSet.add(c.id);
-      }));
+    try {
+      activeCoupons = await CouponService.getActiveByStore(storeId);
+      this._coupons = activeCoupons;
+      if (user && activeCoupons.length > 0) {
+        await Promise.all(activeCoupons.map(async c => {
+          try {
+            if (await CouponService.hasClaimed(c.id, user.id)) claimedSet.add(c.id);
+          } catch (_) {}
+        }));
+      }
+    } catch (e) {
+      console.warn('쿠폰 로드 실패:', e);
     }
 
     const categoryIcon = Utils.categoryIcons[store.category] || 'storefront';

@@ -32,7 +32,8 @@ service cloud.firestore {
     // 쿠폰 사용 내역
     match /couponClaims/{claimId} {
       allow read: if request.auth != null &&
-        (resource.data.userId == request.auth.uid ||
+        (resource == null ||
+         resource.data.userId == request.auth.uid ||
          resource.data.ownerId == request.auth.uid ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master');
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
