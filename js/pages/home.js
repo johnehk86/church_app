@@ -23,8 +23,8 @@ const HomePage = {
           <span class="material-symbols-outlined search-bar__icon">filter_list</span>
         </div>
         <header style="margin-bottom:24px">
-          <p class="label-caps" style="margin-bottom:6px">EXPLORE COLLECTIONS</p>
-          <h2 class="headline-md">Discover</h2>
+          <p class="label-caps" style="margin-bottom:6px">수원하나교회 성도 매장</p>
+          <h2 class="headline-md">매장 둘러보기</h2>
         </header>
         <div class="category-filter">${categoryChips}</div>
         <div id="store-list">
