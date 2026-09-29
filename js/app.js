@@ -148,6 +148,7 @@ const Utils = {
 // 인앱 브라우저 감지 → 크롬/사파리 유도
 const BrowserGuard = {
   init() {
+    if (sessionStorage.getItem('browser-banner-dismissed')) return;
     const ua = navigator.userAgent;
     const isAndroid = /Android/.test(ua);
     const isIOS = /iPad|iPhone|iPod/.test(ua);
@@ -189,7 +190,7 @@ const BrowserGuard = {
            style="background:#8B7355;color:white;padding:8px 14px;border-radius:10px;font-size:0.8125rem;font-weight:600;white-space:nowrap;text-decoration:none">
           크롬으로 열기
         </a>
-        <button onclick="document.getElementById('browser-banner').remove()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;flex-shrink:0;padding:0">✕</button>
+        <button onclick="sessionStorage.setItem('browser-banner-dismissed','1');document.getElementById('browser-banner').remove()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;flex-shrink:0;padding:0">✕</button>
       `;
     } else {
       banner.innerHTML = `
@@ -201,7 +202,7 @@ const BrowserGuard = {
         <button onclick="BrowserGuard._copyAndGuide()" style="background:#8B7355;color:white;padding:8px 14px;border-radius:10px;font-size:0.8125rem;font-weight:600;white-space:nowrap;border:none;cursor:pointer">
           주소 복사
         </button>
-        <button onclick="document.getElementById('browser-banner').remove()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;flex-shrink:0;padding:0">✕</button>
+        <button onclick="sessionStorage.setItem('browser-banner-dismissed','1');document.getElementById('browser-banner').remove()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;flex-shrink:0;padding:0">✕</button>
       `;
     }
     document.body.appendChild(banner);
@@ -211,6 +212,7 @@ const BrowserGuard = {
     navigator.clipboard.writeText('https://hana-store.com').then(() => {
       Toast.show('주소 복사 완료! 사파리에서 붙여넣기 하세요.', 'success');
     });
+    sessionStorage.setItem('browser-banner-dismissed', '1');
     document.getElementById('browser-banner')?.remove();
   }
 };
