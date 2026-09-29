@@ -170,8 +170,9 @@ const BrowserGuard = {
   _showBanner(os) {
     const banner = document.createElement('div');
     banner.id = 'browser-banner';
+    const isTop = os === 'ios';
     banner.style.cssText = `
-      position:fixed;bottom:80px;left:16px;right:16px;z-index:9998;
+      position:fixed;${isTop ? 'top:16px' : 'bottom:80px'};left:16px;right:16px;z-index:9998;
       background:#1a1a1a;color:white;border-radius:16px;
       padding:14px 16px;display:flex;align-items:center;gap:12px;
       box-shadow:0 4px 24px rgba(0,0,0,0.3);animation:slideUp 0.3s ease;
