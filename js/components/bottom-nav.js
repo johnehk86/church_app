@@ -14,17 +14,17 @@ const BottomNav = {
         <button class="bottom-nav__item ${activeTab === 'home' ? 'bottom-nav__item--active' : ''}"
                 onclick="App.navigate('#/')">
           <span class="material-symbols-outlined ${activeTab === 'home' ? 'icon-filled' : ''}">auto_awesome</span>
-          <span>Home</span>
+          <span>홈</span>
         </button>
         <button class="bottom-nav__item ${activeTab === 'map' ? 'bottom-nav__item--active' : ''}"
                 onclick="App.navigate('#/map')">
           <span class="material-symbols-outlined ${activeTab === 'map' ? 'icon-filled' : ''}">explore</span>
-          <span>Discover</span>
+          <span>지도</span>
         </button>
         <button class="bottom-nav__item ${activeTab === 'my' ? 'bottom-nav__item--active' : ''}"
                 onclick="App.navigate('${myPageHash}')">
           <span class="material-symbols-outlined ${activeTab === 'my' ? 'icon-filled' : ''}">person</span>
-          <span>Profile</span>
+          <span>내 정보</span>
         </button>
       </nav>
     `;
