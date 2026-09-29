@@ -151,7 +151,7 @@ const BrowserGuard = {
     if (sessionStorage.getItem('browser-banner-dismissed')) return;
     const ua = navigator.userAgent;
     const isAndroid = /Android/.test(ua);
-    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isChrome = /Chrome/.test(ua) && !/Edg|OPR/.test(ua);
     const isSafari = /Safari/.test(ua) && !/Chrome|CriOS/.test(ua);
     const isInApp = /KAKAOTALK|Instagram|FBAN|FBAV|Line|NaverApp|DaumApps|Snapchat/.test(ua);

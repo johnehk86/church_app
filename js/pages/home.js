@@ -37,7 +37,7 @@ const HomePage = {
             <span class="material-symbols-outlined" style="color:var(--accent);font-size:22px">install_mobile</span>
             <span style="font-weight:600;font-size:0.9375rem">앱으로 설치하면 더 편리해요!</span>
           </div>
-          ${/iPhone|iPad|iPod/.test(navigator.userAgent) ? `
+          ${(/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) ? `
           <div style="padding:16px 20px">
             <p style="font-size:0.8125rem;color:var(--secondary);margin-bottom:12px">📱 아이폰 설치 방법</p>
             <div style="display:flex;flex-direction:column;gap:8px;font-size:0.8125rem">
