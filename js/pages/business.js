@@ -8,6 +8,7 @@ const BusinessPage = {
   _interiorPhotos: [], // { url, caption }
   _menuItems: [],      // { name, desc, price }
   _facilities: [],     // { icon, label }
+  _coupons: [],        // 쿠폰 목록
 
   // 선택 가능한 시설 목록
   _facilityOptions: [
@@ -67,6 +68,12 @@ const BusinessPage = {
     this._interiorPhotos = (this._store.interiorPhotos || []).map(p => ({...p}));
     this._menuItems = (this._store.menu || []).map(m => ({...m}));
     this._facilities = (this._store.facilities || []).map(f => ({...f}));
+
+    if (this._store.id) {
+      this._coupons = await CouponService.getByStore(this._store.id);
+    } else {
+      this._coupons = [];
+    }
 
     this._renderForm(container);
   },
@@ -222,6 +229,48 @@ const BusinessPage = {
             </h3>
             <p class="editor-hint">해당하는 항목을 선택하세요</p>
             <div class="facility-check-grid">${facilitiesHtml}</div>
+          </div>
+
+          <!-- ===== 6.5 쿠폰 / 이벤트 ===== -->
+          <div class="editor-section">
+            <h3 class="editor-section__title">
+              <span class="material-symbols-outlined">local_offer</span> 쿠폰 / 이벤트
+            </h3>
+            ${this._isNew ? `
+              <p class="editor-hint">매장을 먼저 등록하면 쿠폰을 추가할 수 있습니다.</p>
+            ` : `
+              <div id="business-coupon-list">
+                ${this._renderCouponList()}
+              </div>
+              <div id="business-coupon-form" style="display:none;border:1px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:12px;background:var(--surface-container)">
+                <div class="form-group">
+                  <label class="form-label">쿠폰 제목</label>
+                  <input class="form-input" id="coupon-title-input" placeholder="예: 첫 방문 10% 할인, 성도 특별 혜택">
+                </div>
+                <div style="display:flex;gap:12px">
+                  <div class="form-group" style="flex:1">
+                    <label class="form-label">할인율 (%)</label>
+                    <input class="form-input" id="coupon-discount-input" type="number" min="1" max="100" placeholder="10">
+                  </div>
+                  <div class="form-group" style="flex:1">
+                    <label class="form-label">발행 매수</label>
+                    <input class="form-input" id="coupon-count-input" type="number" min="1" placeholder="10">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">유효기간 (선택)</label>
+                  <input class="form-input" id="coupon-expires-input" type="date">
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button type="button" class="btn btn--primary" onclick="BusinessPage.saveCoupon()" style="flex:1">저장</button>
+                  <button type="button" class="btn btn--ghost" onclick="BusinessPage.hideCouponForm()" style="flex:1">취소</button>
+                </div>
+              </div>
+              <button type="button" class="btn btn--secondary" id="show-coupon-form-btn"
+                      onclick="BusinessPage.showCouponForm()" style="margin-top:4px">
+                <span class="material-symbols-outlined" style="font-size:18px">add</span> 쿠폰 추가
+              </button>
+            `}
           </div>
 
           <!-- ===== 7. 인테리어 사진 ===== -->
@@ -571,11 +620,112 @@ const BusinessPage = {
     }
   },
 
+  // --- 쿠폰 ---
+  _renderCouponList() {
+    if (this._coupons.length === 0) {
+      return '<p class="editor-hint" style="margin-bottom:12px">등록된 쿠폰이 없습니다.</p>';
+    }
+    return this._coupons.map(c => {
+      const remaining = c.totalCount - (c.usedCount || 0);
+      const expired = c.expiresAt && c.expiresAt.toDate() < new Date();
+      const dim = !c.isActive || expired;
+      return `
+        <div style="border:1px solid var(--outline-variant);border-radius:12px;padding:14px;margin-bottom:10px;background:${dim ? 'var(--surface-dim)' : 'white'}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:0.9375rem;margin-bottom:4px">${Utils.escapeHtml(c.title)}</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                <span style="background:var(--accent);color:white;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">${c.discount}% 할인</span>
+                <span style="font-size:0.8125rem;color:var(--secondary)">잔여 ${remaining}/${c.totalCount}장</span>
+                ${expired ? '<span style="font-size:0.75rem;color:var(--error)">만료</span>' : ''}
+                ${!c.isActive ? '<span style="font-size:0.75rem;color:var(--secondary)">비활성</span>' : ''}
+              </div>
+              ${c.expiresAt ? `<div style="font-size:0.75rem;color:var(--secondary);margin-top:4px">~ ${c.expiresAt.toDate().toLocaleDateString('ko-KR')}</div>` : ''}
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              <button type="button" onclick="BusinessPage.toggleCoupon('${c.id}', ${!c.isActive})"
+                      style="padding:4px 10px;border:1px solid var(--outline-variant);border-radius:8px;background:white;font-size:0.75rem;cursor:pointer">
+                ${c.isActive ? '끄기' : '켜기'}
+              </button>
+              <button type="button" onclick="BusinessPage.deleteCoupon('${c.id}')"
+                      style="padding:4px 10px;border:1px solid var(--error);border-radius:8px;background:white;font-size:0.75rem;color:var(--error);cursor:pointer">
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  showCouponForm() {
+    document.getElementById('business-coupon-form').style.display = 'block';
+    document.getElementById('show-coupon-form-btn').style.display = 'none';
+  },
+
+  hideCouponForm() {
+    document.getElementById('business-coupon-form').style.display = 'none';
+    document.getElementById('show-coupon-form-btn').style.display = 'flex';
+  },
+
+  async saveCoupon() {
+    const title = document.getElementById('coupon-title-input')?.value?.trim();
+    const discount = parseInt(document.getElementById('coupon-discount-input')?.value);
+    const totalCount = parseInt(document.getElementById('coupon-count-input')?.value);
+    const expiresStr = document.getElementById('coupon-expires-input')?.value;
+
+    if (!title) { Toast.show('쿠폰 제목을 입력하세요.', 'error'); return; }
+    if (!discount || discount < 1 || discount > 100) { Toast.show('할인율을 1~100 사이로 입력하세요.', 'error'); return; }
+    if (!totalCount || totalCount < 1) { Toast.show('발행 매수를 입력하세요.', 'error'); return; }
+
+    const user = AuthService.getCurrentUser();
+    const couponData = {
+      storeId: this._store.id,
+      storeName: this._store.name || '',
+      ownerId: user?.id,
+      title, discount, totalCount,
+      expiresAt: expiresStr ? firebase.firestore.Timestamp.fromDate(new Date(expiresStr + 'T23:59:59')) : null
+    };
+
+    try {
+      await CouponService.create(couponData);
+      Toast.show('쿠폰이 등록되었습니다!', 'success');
+      this._coupons = await CouponService.getByStore(this._store.id);
+      this._reRenderForm();
+    } catch (e) {
+      console.error('쿠폰 등록 실패:', e);
+      Toast.show('쿠폰 등록에 실패했습니다.', 'error');
+    }
+  },
+
+  async toggleCoupon(couponId, isActive) {
+    try {
+      await CouponService.toggleActive(couponId, isActive);
+      this._coupons = await CouponService.getByStore(this._store.id);
+      this._reRenderForm();
+    } catch (e) {
+      Toast.show('변경에 실패했습니다.', 'error');
+    }
+  },
+
+  async deleteCoupon(couponId) {
+    if (!confirm('이 쿠폰을 삭제하시겠습니까?')) return;
+    try {
+      await CouponService.delete(couponId);
+      this._coupons = this._coupons.filter(c => c.id !== couponId);
+      this._reRenderForm();
+      Toast.show('삭제되었습니다.', 'info');
+    } catch (e) {
+      Toast.show('삭제에 실패했습니다.', 'error');
+    }
+  },
+
   destroy() {
     this._store = null;
     this._photoDataUrls = [];
     this._interiorPhotos = [];
     this._menuItems = [];
     this._facilities = [];
+    this._coupons = [];
   }
 };

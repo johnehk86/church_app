@@ -3,6 +3,7 @@
  */
 const DetailPage = {
   _store: null,
+  _coupons: [],
 
   async render(container, params) {
     const storeId = params[0];
@@ -20,6 +21,18 @@ const DetailPage = {
     }
 
     this._store = store;
+
+    // 쿠폰 로드
+    const user = AuthService.getCurrentUser();
+    const activeCoupons = await CouponService.getActiveByStore(storeId);
+    this._coupons = activeCoupons;
+    const claimedSet = new Set();
+    if (user && activeCoupons.length > 0) {
+      await Promise.all(activeCoupons.map(async c => {
+        if (await CouponService.hasClaimed(c.id, user.id)) claimedSet.add(c.id);
+      }));
+    }
+
     const categoryIcon = Utils.categoryIcons[store.category] || 'storefront';
 
     // 사진
@@ -44,6 +57,38 @@ const DetailPage = {
     let facilitiesSection = '';
     if (store.facilities && store.facilities.length > 0) {
       facilitiesSection = `<div class="detail-section"><h3 class="detail-section__title"><span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">stars</span>Facilities & Features</h3><div class="facility-tags">${store.facilities.map(f => `<div class="facility-tag"><span class="material-symbols-outlined" style="font-size:16px">${f.icon || 'check_circle'}</span><span>${Utils.escapeHtml(f.label)}</span></div>`).join('')}</div></div>`;
+    }
+
+    // 쿠폰
+    let couponSection = '';
+    if (activeCoupons.length > 0) {
+      const couponHtml = activeCoupons.map(c => {
+        const isClaimed = claimedSet.has(c.id);
+        return `
+          <div style="border:2px solid var(--accent-light);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:0.9375rem;margin-bottom:4px">${Utils.escapeHtml(c.title)}</div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <span style="background:var(--accent);color:white;padding:2px 10px;border-radius:20px;font-size:0.8125rem;font-weight:700">${c.discount}% 할인</span>
+                <span style="font-size:0.8125rem;color:var(--secondary)">잔여 ${c.totalCount - (c.usedCount || 0)}장</span>
+              </div>
+              ${c.expiresAt ? `<div style="font-size:0.75rem;color:var(--secondary);margin-top:4px">~ ${c.expiresAt.toDate().toLocaleDateString('ko-KR')}</div>` : ''}
+            </div>
+            ${isClaimed
+              ? '<span style="padding:6px 16px;border-radius:20px;background:var(--surface-dim);font-size:0.8125rem;color:var(--secondary);flex-shrink:0">수령완료</span>'
+              : !user
+                ? `<button class="btn btn--secondary btn--small" onclick="App.navigate('#/login')" style="width:auto;flex-shrink:0">로그인</button>`
+                : `<button class="btn btn--primary btn--small" id="claim-btn-${c.id}" onclick="DetailPage.claimCoupon('${c.id}')" style="width:auto;flex-shrink:0">받기</button>`
+            }
+          </div>
+        `;
+      }).join('');
+      couponSection = `
+        <div class="detail-section">
+          <h3 class="detail-section__title"><span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">local_offer</span>이벤트 쿠폰</h3>
+          ${couponHtml}
+        </div>
+      `;
     }
 
     // 혜택
@@ -76,6 +121,7 @@ const DetailPage = {
       <div class="page">
         <div class="detail-hero"><div class="detail-slider" id="detail-slider">${photos}</div>${dots}${photoCounter}</div>
         <div style="margin-bottom:20px"><p class="label-caps" style="color:var(--accent);margin-bottom:8px">${Utils.escapeHtml(store.category || '기타')}</p><h2 style="font-family:var(--font-display);font-size:1.75rem;font-weight:600">${Utils.escapeHtml(store.name)}</h2></div>
+        ${couponSection}
         ${benefitSection}
         <div class="detail-section"><div class="detail-owner"><div class="detail-owner__photo">${store.ownerPhoto ? `<img src="${Utils.escapeHtml(store.ownerPhoto)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : `<span class="material-symbols-outlined" style="font-size:1.5rem;color:var(--outline)">person</span>`}</div><div><div class="detail-owner__name">${Utils.escapeHtml(store.ownerName || '')}</div><div class="detail-owner__label">Owner</div></div></div></div>
         ${ownerMessageSection}
@@ -117,5 +163,28 @@ const DetailPage = {
     window.open(`https://map.naver.com/v5/search/${encodeURIComponent(this._store.name)}?c=${lng},${lat},15,0,0,0,dh`, '_blank');
   },
 
-  destroy() { this._store = null; }
+  async claimCoupon(couponId) {
+    const user = AuthService.getCurrentUser();
+    if (!user) { App.navigate('#/login'); return; }
+
+    const btn = document.getElementById(`claim-btn-${couponId}`);
+    if (btn) { btn.disabled = true; btn.textContent = '처리중...'; }
+
+    try {
+      await CouponService.claim(couponId, user.id);
+      Toast.show('쿠폰을 받았습니다! 내 쿠폰에서 확인하세요.', 'success');
+      if (btn) {
+        btn.textContent = '수령완료';
+        btn.style.background = 'var(--surface-dim)';
+        btn.style.color = 'var(--secondary)';
+        btn.style.border = '1px solid var(--outline-variant)';
+      }
+    } catch (e) {
+      const msg = e.message === 'already_claimed' ? '이미 받은 쿠폰입니다.' : (e.message || '쿠폰 수령에 실패했습니다.');
+      Toast.show(msg, 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '받기'; }
+    }
+  },
+
+  destroy() { this._store = null; this._coupons = []; }
 };

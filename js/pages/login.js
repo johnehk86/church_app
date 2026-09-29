@@ -3,6 +3,7 @@
  */
 const LoginPage = {
   _mode: 'login',
+  _myCoupons: [],
 
   render(container) {
     const user = AuthService.getCurrentUser();
@@ -17,6 +18,8 @@ const LoginPage = {
     const userData = AuthService.getUserData();
     const roleLabels = { master: 'Administrator', business: 'Store Owner', member: 'Member' };
     const roleClass = userData?.role || 'member';
+    // 쿠폰 비동기 로드 (렌더 후)
+    setTimeout(() => this._loadMyCoupons(user.id), 0);
 
     container.innerHTML = `
       <div class="page login-page">
@@ -45,6 +48,15 @@ const LoginPage = {
           <button class="btn btn--ghost" onclick="AuthService.deleteAccount()" style="margin-top:4px;color:var(--error);font-size:0.8125rem">
             회원탈퇴
           </button>
+        </div>
+
+        <!-- 내 쿠폰 -->
+        <div id="my-coupons-section" style="margin-top:28px;width:100%;max-width:320px;text-align:left">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <span class="material-symbols-outlined" style="font-size:20px;color:var(--accent)">local_offer</span>
+            <h3 style="font-size:1rem;font-weight:600">내 쿠폰</h3>
+          </div>
+          <div style="display:flex;justify-content:center"><div class="loading-spinner" style="width:24px;height:24px;border-width:2px"></div></div>
         </div>
       </div>
     `;
@@ -152,5 +164,90 @@ const LoginPage = {
   toggleMode() {
     this._mode = this._mode === 'login' ? 'signup' : 'login';
     this.render(document.getElementById('app-content'));
+  },
+
+  async _loadMyCoupons(userId) {
+    const section = document.getElementById('my-coupons-section');
+    if (!section) return;
+    try {
+      this._myCoupons = await CouponService.getMyCoupons(userId);
+    } catch (e) {
+      this._myCoupons = [];
+    }
+    const now = new Date();
+    const header = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span class="material-symbols-outlined" style="font-size:20px;color:var(--accent)">local_offer</span>
+        <h3 style="font-size:1rem;font-weight:600">내 쿠폰</h3>
+      </div>
+    `;
+    if (this._myCoupons.length === 0) {
+      section.innerHTML = header + '<p style="font-size:0.875rem;color:var(--secondary)">받은 쿠폰이 없습니다.</p>';
+      return;
+    }
+    const html = this._myCoupons.map((c, i) => {
+      const expired = c.expiresAt && c.expiresAt.toDate() < now;
+      const inactive = c.isUsed || expired;
+      return `
+        <div style="border:1px solid ${inactive ? 'var(--outline-variant)' : 'var(--accent)'};border-radius:12px;padding:14px;margin-bottom:8px;opacity:${inactive ? '0.6' : '1'}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:0.8125rem;color:var(--secondary);margin-bottom:2px">${Utils.escapeHtml(c.storeName || '')}</div>
+              <div style="font-weight:600;font-size:0.9375rem;margin-bottom:6px">${Utils.escapeHtml(c.couponTitle || '')}</div>
+              <span style="background:var(--accent);color:white;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">${c.discount}% 할인</span>
+              ${c.expiresAt ? `<span style="font-size:0.75rem;color:var(--secondary);margin-left:6px">~ ${c.expiresAt.toDate().toLocaleDateString('ko-KR')}</span>` : ''}
+            </div>
+            <div style="flex-shrink:0">
+              ${c.isUsed
+                ? '<span style="font-size:0.75rem;color:var(--secondary);background:var(--surface-dim);padding:5px 10px;border-radius:8px;white-space:nowrap">사용완료</span>'
+                : expired
+                  ? '<span style="font-size:0.75rem;color:var(--secondary);background:var(--surface-dim);padding:5px 10px;border-radius:8px">만료됨</span>'
+                  : `<button class="btn btn--primary btn--small" onclick="LoginPage.showCouponModal(${i})" style="width:auto;font-size:0.8125rem">사용하기</button>`
+              }
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    section.innerHTML = header + html;
+  },
+
+  showCouponModal(index) {
+    const c = this._myCoupons[index];
+    if (!c) return;
+    const existing = document.getElementById('coupon-use-modal');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'coupon-use-modal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    overlay.innerHTML = `
+      <div style="background:white;border-radius:24px;padding:32px 24px;max-width:320px;width:100%;text-align:center">
+        <span class="material-symbols-outlined icon-filled" style="font-size:3.5rem;color:var(--accent)">local_offer</span>
+        <div style="font-size:0.875rem;color:var(--secondary);margin-top:8px">${Utils.escapeHtml(c.storeName || '')}</div>
+        <h2 style="font-family:var(--font-display);font-size:1.375rem;font-weight:700;margin:8px 0 16px">${Utils.escapeHtml(c.couponTitle || '')}</h2>
+        <div style="font-size:4rem;font-weight:900;color:var(--accent);line-height:1">${c.discount}%</div>
+        <div style="font-size:1rem;color:var(--secondary);margin:4px 0 20px">할인 쿠폰</div>
+        <div style="background:var(--surface-container);border-radius:12px;padding:12px 16px;margin-bottom:24px">
+          <p style="font-size:0.875rem;color:var(--on-surface-variant)">📱 사장님께 이 화면을 보여주세요</p>
+        </div>
+        <button class="btn btn--primary" onclick="LoginPage.useCoupon('${c.id}')" style="margin-bottom:8px">사용 완료 처리</button>
+        <button class="btn btn--ghost" onclick="document.getElementById('coupon-use-modal').remove()">닫기</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  },
+
+  async useCoupon(claimId) {
+    if (!confirm('쿠폰을 사용하시겠습니까?\n사용 후에는 취소할 수 없습니다.')) return;
+    try {
+      await CouponService.markUsed(claimId);
+      const modal = document.getElementById('coupon-use-modal');
+      if (modal) modal.remove();
+      Toast.show('쿠폰이 사용되었습니다!', 'success');
+      this.render(document.getElementById('app-content'));
+    } catch (e) {
+      Toast.show('처리에 실패했습니다. 다시 시도해주세요.', 'error');
+    }
   }
 };
