@@ -41,7 +41,10 @@ const BusinessPage = {
     const editStoreId = params && params[0];
 
     // 매장 로드 (비동기)
-    if (editStoreId && role === 'master') {
+    const isNewRoute = App.currentRoute === 'new-store';
+    if (isNewRoute) {
+      this._store = null; // 항상 새 매장 생성
+    } else if (editStoreId && role === 'master') {
       this._store = await StoreService.getById(editStoreId);
     } else {
       this._store = await StoreService.getByOwnerId(user.id);

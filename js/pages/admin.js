@@ -79,7 +79,7 @@ const AdminPage = {
           <button class="btn btn--secondary btn--small" onclick="AdminPage.addSampleStores()" style="width:auto">
             <span class="material-symbols-outlined" style="font-size:16px">auto_awesome</span> 샘플 추가
           </button>
-          <button class="btn btn--primary btn--small" onclick="App.navigate('#/my-store')" style="width:auto">
+          <button class="btn btn--primary btn--small" onclick="App.navigate('#/new-store')" style="width:auto">
             <span class="material-symbols-outlined" style="font-size:16px">add</span> 새 매장
           </button>
         </div>
