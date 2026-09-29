@@ -21,7 +21,7 @@ const Header = {
       : '<div style="width:40px"></div>';
 
     const logoInTitle = !showBack
-      ? `<img src="assets/icons/church-logo.png" alt="" style="width:30px;height:30px;object-fit:contain;margin-right:8px">`
+      ? `<img src="assets/icons/church-logo.png" alt="" style="width:30px;height:30px;object-fit:contain;margin-right:8px;mix-blend-mode:multiply">`
       : '';
 
     header.innerHTML = `
