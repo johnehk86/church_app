@@ -24,7 +24,7 @@ const HomePage = {
         </div>
         <header style="margin-bottom:24px">
           <h2 class="headline-md">Discover</h2>
-          <p class="label-caps" style="margin-top:6px;margin-bottom:0">수원하나교회 성도 매장 둘러보기</p>
+          <p class="label-caps" style="margin-top:6px;margin-bottom:0">성도 매장 둘러보기</p>
         </header>
         <div class="category-filter">${categoryChips}</div>
         <div id="store-list">
