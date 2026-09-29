@@ -192,21 +192,15 @@ const BrowserGuard = {
         <button onclick="document.getElementById('browser-banner').remove()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;flex-shrink:0;padding:0">✕</button>
       `;
     } else {
-      const isKakao = /KAKAOTALK/.test(navigator.userAgent);
       banner.innerHTML = `
         <span class="material-symbols-outlined" style="font-size:24px;color:#8B7355;flex-shrink:0">phone_iphone</span>
         <div style="flex:1;font-size:0.8125rem">
-          <div style="font-weight:600;margin-bottom:2px">사파리로 여시면 설치 가능해요</div>
-          <div style="color:rgba(255,255,255,0.6);font-size:0.75rem">
-            ${isKakao
-              ? '하단 <strong style="color:white">⋯ → Safari로 열기</strong> 를 눌러주세요'
-              : '사파리 → 공유(↑) → 홈 화면에 추가'}
-          </div>
+          <div style="font-weight:600;margin-bottom:2px">사파리(Safari)에서 열어주세요</div>
+          <div style="color:rgba(255,255,255,0.6);font-size:0.75rem">주소 복사 → 사파리 앱 열기 → 붙여넣기</div>
         </div>
-        ${isKakao ? '' : `
         <button onclick="BrowserGuard._copyAndGuide()" style="background:#8B7355;color:white;padding:8px 14px;border-radius:10px;font-size:0.8125rem;font-weight:600;white-space:nowrap;border:none;cursor:pointer">
           주소 복사
-        </button>`}
+        </button>
         <button onclick="document.getElementById('browser-banner').remove()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;flex-shrink:0;padding:0">✕</button>
       `;
     }
