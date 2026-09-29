@@ -12,6 +12,7 @@ service cloud.firestore {
       allow update: if request.auth != null &&
         (request.auth.uid == userId ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master');
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
     // 매장
@@ -23,7 +24,8 @@ service cloud.firestore {
         (resource.data.ownerId == request.auth.uid ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master');
       allow delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master';
+        (resource.data.ownerId == request.auth.uid ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master');
     }
   }
 }
