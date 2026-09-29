@@ -145,5 +145,77 @@ const Utils = {
   }
 };
 
+// 인앱 브라우저 감지 → 크롬/사파리 유도
+const BrowserGuard = {
+  init() {
+    const ua = navigator.userAgent;
+    const isAndroid = /Android/.test(ua);
+    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isChrome = /Chrome/.test(ua) && !/Edg|OPR/.test(ua);
+    const isSafari = /Safari/.test(ua) && !/Chrome|CriOS/.test(ua);
+    const isInApp = /KAKAOTALK|Instagram|FBAN|FBAV|Line|NaverApp|DaumApps|Snapchat/.test(ua);
+
+    if (isAndroid && (!isChrome || isInApp)) {
+      // 안드로이드 인앱브라우저 → 크롬 intent로 자동 이동
+      if (isInApp) {
+        window.location.href = `intent://${location.host}${location.pathname}${location.hash}#Intent;scheme=https;package=com.android.chrome;end`;
+        return;
+      }
+      this._showBanner('android');
+    } else if (isIOS && (!isSafari || isInApp)) {
+      this._showBanner('ios');
+    }
+  },
+
+  _showBanner(os) {
+    const banner = document.createElement('div');
+    banner.id = 'browser-banner';
+    banner.style.cssText = `
+      position:fixed;bottom:80px;left:16px;right:16px;z-index:9998;
+      background:#1a1a1a;color:white;border-radius:16px;
+      padding:14px 16px;display:flex;align-items:center;gap:12px;
+      box-shadow:0 4px 24px rgba(0,0,0,0.3);animation:slideUp 0.3s ease;
+    `;
+
+    if (os === 'android') {
+      banner.innerHTML = `
+        <span class="material-symbols-outlined" style="font-size:24px;color:#8B7355;flex-shrink:0">open_in_new</span>
+        <div style="flex:1;font-size:0.8125rem">
+          <div style="font-weight:600;margin-bottom:2px">크롬으로 여시면 설치 가능해요</div>
+          <div style="color:rgba(255,255,255,0.6);font-size:0.75rem">앱처럼 홈 화면에 추가할 수 있습니다</div>
+        </div>
+        <a href="intent://${location.host}${location.pathname}${location.hash}#Intent;scheme=https;package=com.android.chrome;end"
+           style="background:#8B7355;color:white;padding:8px 14px;border-radius:10px;font-size:0.8125rem;font-weight:600;white-space:nowrap;text-decoration:none">
+          크롬으로 열기
+        </a>
+        <button onclick="document.getElementById('browser-banner').remove()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;flex-shrink:0;padding:0">✕</button>
+      `;
+    } else {
+      banner.innerHTML = `
+        <span class="material-symbols-outlined" style="font-size:24px;color:#8B7355;flex-shrink:0">phone_iphone</span>
+        <div style="flex:1;font-size:0.8125rem">
+          <div style="font-weight:600;margin-bottom:2px">사파리로 여시면 설치 가능해요</div>
+          <div style="color:rgba(255,255,255,0.6);font-size:0.75rem">사파리 → 공유(↑) → 홈 화면에 추가</div>
+        </div>
+        <button onclick="BrowserGuard._copyAndGuide()" style="background:#8B7355;color:white;padding:8px 14px;border-radius:10px;font-size:0.8125rem;font-weight:600;white-space:nowrap;border:none;cursor:pointer">
+          주소 복사
+        </button>
+        <button onclick="document.getElementById('browser-banner').remove()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;flex-shrink:0;padding:0">✕</button>
+      `;
+    }
+    document.body.appendChild(banner);
+  },
+
+  _copyAndGuide() {
+    navigator.clipboard.writeText('https://hana-store.com').then(() => {
+      Toast.show('주소 복사 완료! 사파리에서 붙여넣기 하세요.', 'success');
+    });
+    document.getElementById('browser-banner')?.remove();
+  }
+};
+
 // 앱 시작
-document.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('DOMContentLoaded', () => {
+  BrowserGuard.init();
+  App.init();
+});
