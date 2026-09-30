@@ -135,9 +135,9 @@ const DetailPage = {
         ${store.description ? `<div class="detail-section"><h3 class="detail-section__title"><span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">info</span>About</h3><p style="font-size:0.9375rem;line-height:1.8;color:var(--on-surface-variant);white-space:pre-line">${Utils.escapeHtml(store.description)}</p></div>` : ''}
         ${menuSection}${facilitiesSection}${gallerySection}
         <div class="detail-section"><h3 class="detail-section__title"><span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">contact_phone</span>Contact & Info</h3>${contactRows.join('')}</div>
-        <div class="detail-actions">
-          ${store.contact?.phone ? `<a href="tel:${Utils.escapeHtml(store.contact.phone)}" class="btn btn--primary"><span class="material-symbols-outlined" style="font-size:18px">call</span> Call</a>` : ''}
-          ${store.location?.lat ? `<button class="btn btn--secondary" onclick="DetailPage.openNaverMap()"><span class="material-symbols-outlined" style="font-size:18px">directions</span> 위치지도 및 매장정보</button>` : ''}
+        <div class="detail-actions" style="flex-direction:column">
+          ${store.contact?.phone ? `<a href="tel:${Utils.escapeHtml(store.contact.phone)}" class="btn btn--primary" style="width:100%"><span class="material-symbols-outlined" style="font-size:18px">call</span> Call</a>` : ''}
+          ${store.location?.lat ? `<button class="btn btn--secondary" onclick="DetailPage.openNaverMap()" style="width:100%"><span class="material-symbols-outlined" style="font-size:18px">directions</span> 위치지도 및 매장정보</button>` : ''}
         </div>
       </div>`;
     this._initSlider();
