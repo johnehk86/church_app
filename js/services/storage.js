@@ -11,9 +11,8 @@ const StorageService = {
     const ref = storage.ref().child(`${path}/${fileName}.jpg`);
 
     if (typeof input === 'string' && input.startsWith('data:')) {
-      // dataURL → blob
-      const res = await fetch(input);
-      const blob = await res.blob();
+      // dataURL → 리사이즈 후 blob 업로드
+      const blob = await this._resizeDataUrl(input, 1200);
       await ref.put(blob);
     } else if (input instanceof File) {
       // 이미지 리사이즈 후 업로드
@@ -42,6 +41,26 @@ const StorageService = {
       }
     }
     return result;
+  },
+
+  _resizeDataUrl(dataUrl, maxSize) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w <= maxSize && h <= maxSize) {
+          fetch(dataUrl).then(r => r.blob()).then(resolve);
+          return;
+        }
+        if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+        else { w = Math.round(w * maxSize / h); h = maxSize; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(resolve, 'image/jpeg', 0.85);
+      };
+      img.src = dataUrl;
+    });
   },
 
   /**
