@@ -145,6 +145,78 @@ const Utils = {
   }
 };
 
+// 홈 화면 설치 프롬프트 (Android Chrome)
+let _installPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  _installPrompt = e;
+});
+
+const InstallHelper = {
+  canNativePrompt() {
+    return !!_installPrompt;
+  },
+
+  async triggerInstall() {
+    if (_installPrompt) {
+      _installPrompt.prompt();
+      await _installPrompt.userChoice;
+      _installPrompt = null;
+      return;
+    }
+    // iOS: 팝업 안내
+    this._showIOSGuide();
+  },
+
+  _showIOSGuide() {
+    if (document.getElementById('ios-install-modal')) return;
+    const modal = document.createElement('div');
+    modal.id = 'ios-install-modal';
+    modal.style.cssText = `
+      position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);
+      display:flex;align-items:flex-end;justify-content:center;
+    `;
+    modal.innerHTML = `
+      <div style="background:var(--surface,#fff);border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px;position:relative">
+        <button onclick="document.getElementById('ios-install-modal').remove()"
+                style="position:absolute;top:16px;right:16px;background:var(--surface-container,#f5f5f5);border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;color:var(--secondary,#666)">✕</button>
+        <h3 style="font-size:1.125rem;font-weight:700;margin-bottom:6px;text-align:center">홈 화면에 추가하기</h3>
+        <p style="font-size:0.8125rem;color:var(--secondary,#666);text-align:center;margin-bottom:24px">아래 3단계만 따라하세요!</p>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;align-items:center;gap:14px;background:var(--surface-container,#f5f5f5);border-radius:14px;padding:14px">
+            <div style="background:#007AFF;color:white;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;flex-shrink:0">1</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9375rem">하단 공유 버튼 터치</div>
+              <div style="color:var(--secondary,#666);font-size:0.8125rem;margin-top:2px">화면 아래 가운데 <strong style="font-size:1.1em">⬆</strong> 버튼을 누르세요</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;background:var(--surface-container,#f5f5f5);border-radius:14px;padding:14px">
+            <div style="background:#007AFF;color:white;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;flex-shrink:0">2</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9375rem">"홈 화면에 추가" 선택</div>
+              <div style="color:var(--secondary,#666);font-size:0.8125rem;margin-top:2px">아래로 스크롤해서 찾으세요</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;background:var(--surface-container,#f5f5f5);border-radius:14px;padding:14px">
+            <div style="background:#007AFF;color:white;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;flex-shrink:0">3</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9375rem">오른쪽 위 "추가" 터치</div>
+              <div style="color:var(--secondary,#666);font-size:0.8125rem;margin-top:2px">완료! 홈 화면에 앱이 생겨요</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;text-align:center;font-size:0.75rem;color:var(--secondary,#999)">
+          ※ 사파리(Safari) 브라우저에서만 가능합니다
+        </div>
+      </div>
+    `;
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+  }
+};
+
 // 인앱 브라우저 감지 → 크롬/사파리 유도
 const BrowserGuard = {
   init() {

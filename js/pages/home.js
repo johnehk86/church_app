@@ -32,10 +32,10 @@ const HomePage = {
         </div>
 
         ${this._isInstalled() ? '' : `
-        <button onclick="App.navigate('#/install')" style="margin-top:32px;width:100%;background:var(--surface-container-high);border:none;border-radius:20px;padding:28px 20px;cursor:pointer;text-align:center;display:block">
+        <button onclick="InstallHelper.triggerInstall()" style="margin-top:32px;width:100%;background:var(--surface-container-high);border:none;border-radius:20px;padding:28px 20px;cursor:pointer;text-align:center;display:block">
           <span class="material-symbols-outlined" style="font-size:2rem;color:var(--primary);display:block;margin-bottom:10px">install_mobile</span>
           <div style="font-weight:700;font-size:1rem;color:var(--primary);margin-bottom:4px">앱으로 설치하기</div>
-          <div style="font-size:0.8125rem;color:var(--secondary)">홈 화면에 추가하면 더 빠르게!</div>
+          <div style="font-size:0.8125rem;color:var(--secondary)">버튼 하나로 홈 화면에 추가!</div>
         </button>`}
       </div>
     `;
