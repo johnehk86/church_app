@@ -137,7 +137,7 @@ const DetailPage = {
         <div class="detail-section"><h3 class="detail-section__title"><span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">contact_phone</span>Contact & Info</h3>${contactRows.join('')}</div>
         <div class="detail-actions">
           ${store.contact?.phone ? `<a href="tel:${Utils.escapeHtml(store.contact.phone)}" class="btn btn--primary"><span class="material-symbols-outlined" style="font-size:18px">call</span> Call</a>` : ''}
-          ${store.location?.lat ? `<button class="btn btn--secondary" onclick="DetailPage.openNaverMap()"><span class="material-symbols-outlined" style="font-size:18px">directions</span> Navigate</button>` : ''}
+          ${store.location?.lat ? `<button class="btn btn--secondary" onclick="DetailPage.openNaverMap()"><span class="material-symbols-outlined" style="font-size:18px">directions</span> 위치지도 및 매장정보</button>` : ''}
         </div>
       </div>`;
     this._initSlider();
