@@ -119,7 +119,7 @@ const Toast = {
 const Utils = {
   categories: [
     '전체', '음식점', '카페', '베이커리', '미용/뷰티', '의료/건강',
-    '교육', '생활서비스', '패션/잡화', '안경/광학', '자동차', '부동산', '기타'
+    '교육', '생활서비스', '패션/잡화', '안경/광학', '자동차', '부동산', '온라인 쇼핑몰', '기타'
   ],
 
   categoryIcons: {
@@ -128,7 +128,7 @@ const Utils = {
     '교육': 'school', '생활서비스': 'handyman',
     '패션/잡화': 'checkroom', '안경/광학': 'visibility',
     '자동차': 'directions_car',
-    '부동산': 'apartment', '기타': 'storefront'
+    '부동산': 'apartment', '온라인 쇼핑몰': 'shopping_cart', '기타': 'storefront'
   },
 
   escapeHtml(str) {
