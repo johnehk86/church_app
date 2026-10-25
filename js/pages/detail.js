@@ -98,9 +98,14 @@ const DetailPage = {
               <div style="width:${Math.round(ratio * 100)}%;height:100%;background:${tone};border-radius:3px"></div>
             </div>
             ${CouponService.isUpcoming(c)
-              ? `<div style="text-align:center;padding:12px;border-radius:12px;background:#FFF4E5;color:#B36B00;font-size:0.9375rem;font-weight:700">
-                   행사 예정 · ${c.startsAt.toDate().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}부터 받기 가능
-                   <span style="margin-left:4px;background:#B36B00;color:white;padding:1px 8px;border-radius:10px;font-size:0.75rem">D-${Math.ceil((c.startsAt.toDate() - new Date()) / 86400000)}</span>
+              ? `<button class="btn" disabled style="width:100%;background:var(--surface-dim);color:var(--secondary);border:1px dashed var(--outline-variant);cursor:not-allowed">
+                   <span class="material-symbols-outlined" style="font-size:18px">lock_clock</span>
+                   쿠폰 받기 · ${c.startsAt.toDate().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}부터
+                 </button>
+                 <div style="margin-top:10px;padding:12px;border-radius:12px;background:#FFF4E5;color:#B36B00;text-align:center;font-size:0.875rem;line-height:1.6">
+                   <span style="background:#B36B00;color:white;padding:1px 8px;border-radius:10px;font-size:0.75rem;font-weight:700">행사 예정 D-${Math.ceil((c.startsAt.toDate() - new Date()) / 86400000)}</span><br>
+                   <strong>${c.startsAt.toDate().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} 0시부터</strong> 위 버튼으로 쿠폰을 받을 수 있어요.<br>
+                   <span style="font-size:0.8125rem">그때 이 매장 페이지에 다시 들어와 주세요!</span>
                  </div>`
               : isClaimed
               ? '<div style="text-align:center;padding:10px;border-radius:12px;background:var(--surface-dim);font-size:0.875rem;color:var(--secondary)">수령완료 · 내 정보 > 내 쿠폰에서 사용하세요</div>'
