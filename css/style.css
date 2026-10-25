@@ -1636,8 +1636,22 @@ input, textarea, select {
   }
 }
 
-/* 쿠폰 기간 달력 (flatpickr range) */
-.coupon-range-calendar + .flatpickr-calendar.inline { margin: 0 auto; box-shadow: none; border: 1px solid var(--outline-variant); border-radius: 12px; }
+/* 쿠폰 기간 달력 (flatpickr range) - 화면 폭에 맞추고 터치 영역 확대 */
+.coupon-range-calendar { display: none; }
+.coupon-range-calendar + .flatpickr-calendar.inline {
+  width: 100% !important; max-width: 400px; margin: 0 auto; box-shadow: none;
+  border: 1px solid var(--outline-variant); border-radius: 12px; padding-bottom: 6px;
+}
+.coupon-range-calendar + .flatpickr-calendar.inline .flatpickr-innerContainer,
+.coupon-range-calendar + .flatpickr-calendar.inline .flatpickr-rContainer,
+.coupon-range-calendar + .flatpickr-calendar.inline .flatpickr-days,
+.coupon-range-calendar + .flatpickr-calendar.inline .dayContainer {
+  width: 100% !important; min-width: 100% !important; max-width: 100% !important;
+}
+.coupon-range-calendar + .flatpickr-calendar.inline .flatpickr-day {
+  max-width: none; flex-basis: 14.2857%; height: 44px; line-height: 44px; font-size: 0.9375rem;
+}
+.coupon-range-calendar + .flatpickr-calendar.inline .flatpickr-weekdays { width: 100%; }
 .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange,
 .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover {
   background: var(--accent); border-color: var(--accent); color: #fff;
@@ -1646,7 +1660,4 @@ input, textarea, select {
   background: var(--accent-light); border-color: var(--accent-light); color: #1a1a1a;
   box-shadow: -5px 0 0 var(--accent-light), 5px 0 0 var(--accent-light);
 }
-.flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n+1)),
-.flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n+1)),
-.flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n+1)) { box-shadow: -10px 0 0 var(--accent); }
 .flatpickr-day.today { border-color: var(--accent); }

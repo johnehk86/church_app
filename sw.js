@@ -1,4 +1,4 @@
-const CACHE_NAME = 'church-store-v5';
+const CACHE_NAME = 'church-store-v6';
 const STATIC_ASSETS = [
   './css/style.css',
   './assets/icons/church-logo.png',
