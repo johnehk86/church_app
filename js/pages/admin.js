@@ -326,7 +326,7 @@ const AdminPage = {
       },
       {
         name: '아이뜰 안경원',
-        category: '안경/광학',
+        category: '안경',
         description: '정밀 시력 검사부터 맞춤 안경 제작까지. 다양한 국내외 브랜드 보유.',
         address: '경기도 수원시 영통구 봉영로 77',
         hours: '매일 10:00~20:00',
