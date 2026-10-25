@@ -38,7 +38,7 @@ const CouponService = {
     return !!(c.startsAt && c.startsAt.toDate() > new Date());
   },
 
-  // 매장별 노출 쿠폰 (회원용) - 시작 전 쿠폰도 '오픈 예정'으로 노출, 수령은 claim()에서 차단
+  // 매장별 노출 쿠폰 (회원용) - 시작 전 쿠폰도 '행사 예정'으로 노출, 수령은 claim()에서 차단
   async getActiveByStore(storeId) {
     const all = await this.getByStore(storeId);
     const now = new Date();

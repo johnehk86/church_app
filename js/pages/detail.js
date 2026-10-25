@@ -99,7 +99,7 @@ const DetailPage = {
             </div>
             ${CouponService.isUpcoming(c)
               ? `<div style="text-align:center;padding:12px;border-radius:12px;background:#FFF4E5;color:#B36B00;font-size:0.9375rem;font-weight:700">
-                   오픈 예정 · ${c.startsAt.toDate().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}부터 받기 가능
+                   행사 예정 · ${c.startsAt.toDate().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}부터 받기 가능
                    <span style="margin-left:4px;background:#B36B00;color:white;padding:1px 8px;border-radius:10px;font-size:0.75rem">D-${Math.ceil((c.startsAt.toDate() - new Date()) / 86400000)}</span>
                  </div>`
               : isClaimed
