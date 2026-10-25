@@ -344,6 +344,23 @@ const BusinessPage = {
               </div>
             </div>
             <p class="editor-hint">주소 입력 후 "좌표 찾기"를 누르면 자동으로 위도/경도가 입력됩니다</p>
+
+            <div class="form-group" style="margin-top:20px;background:var(--surface-container);border-radius:12px;padding:14px">
+              <label class="form-label" style="display:flex;align-items:center;gap:6px">
+                <span style="background:#03C75A;color:white;font-weight:900;font-size:0.75rem;padding:1px 6px;border-radius:4px">N</span>
+                네이버 지도 링크 (추천)
+              </label>
+              <textarea class="form-textarea" name="naverMapUrl" rows="2" style="min-height:56px"
+                        placeholder="네이버 지도에서 공유 → 복사한 내용을 그대로 붙여넣으세요"
+                        oninput="BusinessPage.checkNaverLink(this.value)">${Utils.escapeHtml(s.naverMapUrl || '')}</textarea>
+              <div id="naver-link-status" style="font-size:0.8125rem;margin-top:6px"></div>
+              <p class="editor-hint" style="margin-top:6px;line-height:1.6">
+                ① 네이버 지도 앱에서 내 매장 검색<br>
+                ② <strong>공유</strong> 버튼 → <strong>복사</strong><br>
+                ③ 여기에 붙여넣기<br>
+                → "위치지도 및 매장정보" 버튼이 내 매장 페이지로 정확히 연결돼요.
+              </p>
+            </div>
           </div>
 
           <!-- ===== 9. 운영시간 ===== -->
@@ -402,6 +419,7 @@ const BusinessPage = {
       address: form.address?.value || '',
       lat: form.lat?.value || '',
       lng: form.lng?.value || '',
+      naverMapUrl: form.naverMapUrl?.value || '',
       hours: form.hours?.value || '',
       phone: form.phone?.value || '',
       kakao: form.kakao?.value || '',
@@ -575,12 +593,29 @@ const BusinessPage = {
       </div>`;
   },
 
+  checkNaverLink(text) {
+    const el = document.getElementById('naver-link-status');
+    if (!el) return;
+    if (!text.trim()) { el.innerHTML = ''; return; }
+    el.innerHTML = Utils.extractNaverMapUrl(text)
+      ? '<span style="color:#2E7D32;font-weight:600">✓ 네이버 지도 링크가 확인됐어요</span>'
+      : '<span style="color:var(--error)">네이버 지도 링크가 없어요. 공유 → 복사한 내용을 붙여넣어 주세요.</span>';
+  },
+
   // --- 저장 ---
   async onSubmit(event) {
     event.preventDefault();
     const form = document.getElementById('store-form');
     const btn = document.getElementById('submit-btn');
     const user = AuthService.getCurrentUser();
+
+    const naverRaw = form.naverMapUrl.value.trim();
+    const naverMapUrl = Utils.extractNaverMapUrl(naverRaw);
+    if (naverRaw && !naverMapUrl) {
+      Toast.show('네이버 지도 링크를 찾을 수 없어요. 공유 → 복사한 내용을 붙여넣어 주세요.', 'error');
+      form.naverMapUrl.focus();
+      return;
+    }
 
     btn.disabled = true;
     btn.innerHTML = '<div class="loading-spinner" style="width:20px;height:20px;border-width:2px"></div> 저장 중...';
@@ -612,6 +647,7 @@ const BusinessPage = {
         category: form.category.value,
         description: form.description.value.trim(),
         address: form.address.value.trim(),
+        naverMapUrl,
         location: {
           lat: parseFloat(form.lat.value) || null,
           lng: parseFloat(form.lng.value) || null

@@ -59,7 +59,7 @@ const MapPage = {
             <div class="map-popup__address">${Utils.escapeHtml(store.address || '')}</div>
             <div class="map-popup__actions">
               <a href="#/store/${store.id}" class="map-popup__btn"><span class="material-symbols-outlined" style="font-size:14px">info</span> 상세보기</a>
-              <a href="https://map.naver.com/v5/search/${encodeURIComponent(store.name)}?c=${store.location.lng},${store.location.lat},15,0,0,0,dh" target="_blank" rel="noopener" class="map-popup__btn map-popup__btn--naver"><span class="material-symbols-outlined" style="font-size:14px">directions</span> 길찾기</a>
+              <a href="${Utils.escapeHtml(Utils.extractNaverMapUrl(store.naverMapUrl)) || `https://map.naver.com/v5/search/${encodeURIComponent(store.name)}?c=${store.location.lng},${store.location.lat},15,0,0,0,dh`}" target="_blank" rel="noopener" class="map-popup__btn map-popup__btn--naver"><span class="material-symbols-outlined" style="font-size:14px">directions</span> 길찾기</a>
             </div>
           </div>
         </div>`, { maxWidth: 280, minWidth: 240, className: 'map-popup-container' });

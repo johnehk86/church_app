@@ -158,7 +158,7 @@ const DetailPage = {
         <div class="detail-section"><h3 class="detail-section__title"><span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px">contact_phone</span>Contact & Info</h3>${contactRows.join('')}</div>
         <div class="detail-actions" style="flex-direction:column">
           ${store.contact?.phone ? `<a href="tel:${Utils.escapeHtml(store.contact.phone)}" class="btn btn--primary" style="width:100%"><span class="material-symbols-outlined" style="font-size:18px">call</span> Call</a>` : ''}
-          ${store.location?.lat ? `<button class="btn btn--secondary" onclick="DetailPage.openNaverMap()" style="width:100%"><span class="material-symbols-outlined" style="font-size:18px">directions</span> 위치지도 및 매장정보</button>` : ''}
+          ${store.naverMapUrl || store.location?.lat ? `<button class="btn btn--secondary" onclick="DetailPage.openNaverMap()" style="width:100%"><span class="material-symbols-outlined" style="font-size:18px">directions</span> 위치지도 및 매장정보</button>` : ''}
         </div>
       </div>`;
     this._initSlider();
@@ -186,6 +186,8 @@ const DetailPage = {
   },
 
   openNaverMap() {
+    const link = Utils.extractNaverMapUrl(this._store?.naverMapUrl);
+    if (link) { window.open(link, '_blank', 'noopener'); return; }
     if (!this._store?.location?.lat) return;
     const { lat, lng } = this._store.location;
     window.open(`https://map.naver.com/v5/search/${encodeURIComponent(this._store.name)}?c=${lng},${lat},15,0,0,0,dh`, '_blank');

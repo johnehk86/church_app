@@ -131,6 +131,17 @@ const Utils = {
     '부동산': 'apartment', '온라인 쇼핑몰': 'shopping_cart', '기타': 'storefront'
   },
 
+  // 네이버 지도 '공유' 텍스트(매장명+주소+링크)를 통째로 붙여넣어도 링크만 추출, 네이버 도메인만 허용
+  extractNaverMapUrl(text) {
+    const m = (text || '').match(/https:\/\/[^\s"'<>]+/);
+    if (!m) return '';
+    try {
+      const u = new URL(m[0]);
+      const ok = u.hostname === 'naver.me' || u.hostname === 'naver.com' || u.hostname.endsWith('.naver.com');
+      return ok ? u.href : '';
+    } catch (_) { return ''; }
+  },
+
   escapeHtml(str) {
     if (!str) return '';
     const div = document.createElement('div');
