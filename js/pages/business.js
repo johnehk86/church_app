@@ -76,6 +76,8 @@ const BusinessPage = {
     }
 
     this._renderForm(container);
+    this._naverLookupFor = '';
+    if (this._store.naverMapUrl && !this._store.location?.lat) this.checkNaverLink(this._store.naverMapUrl);
   },
 
   _renderForm(container) {
@@ -323,32 +325,11 @@ const BusinessPage = {
             <h3 class="editor-section__title">
               <span class="material-symbols-outlined">location_on</span> 위치 정보
             </h3>
-            <div class="form-group">
-              <label class="form-label">주소</label>
-              <div style="display:flex;gap:8px;align-items:flex-end">
-                <input class="form-input" name="address" value="${Utils.escapeHtml(s.address || '')}" placeholder="매장 주소를 입력하세요" style="flex:1">
-                <button type="button" class="btn btn--primary btn--small" onclick="BusinessPage.findCoords()" id="find-coords-btn" style="width:auto;white-space:nowrap;flex-shrink:0;margin-bottom:2px">
-                  <span class="material-symbols-outlined" style="font-size:16px">search</span> 좌표 찾기
-                </button>
-              </div>
-            </div>
-            <div id="coords-result"></div>
-            <div style="display:flex;gap:12px">
-              <div class="form-group" style="flex:1">
-                <label class="form-label">위도</label>
-                <input class="form-input" name="lat" type="number" step="any" value="${s.location?.lat || ''}" placeholder="자동 입력됩니다">
-              </div>
-              <div class="form-group" style="flex:1">
-                <label class="form-label">경도</label>
-                <input class="form-input" name="lng" type="number" step="any" value="${s.location?.lng || ''}" placeholder="자동 입력됩니다">
-              </div>
-            </div>
-            <p class="editor-hint">주소 입력 후 "좌표 찾기"를 누르면 자동으로 위도/경도가 입력됩니다</p>
 
-            <div class="form-group" style="margin-top:20px;background:var(--surface-container);border-radius:12px;padding:14px">
+            <div class="form-group" style="background:var(--surface-container);border-radius:12px;padding:14px">
               <label class="form-label" style="display:flex;align-items:center;gap:6px">
                 <span style="background:#03C75A;color:white;font-weight:900;font-size:0.75rem;padding:1px 6px;border-radius:4px">N</span>
-                네이버 지도 링크 (추천)
+                네이버 지도 링크
               </label>
               <textarea class="form-textarea" name="naverMapUrl" rows="2" style="min-height:56px"
                         placeholder="네이버 지도에서 공유 → 복사한 내용을 그대로 붙여넣으세요"
@@ -358,9 +339,29 @@ const BusinessPage = {
                 ① 네이버 지도 앱에서 내 매장 검색<br>
                 ② <strong>공유</strong> 버튼 → <strong>복사</strong><br>
                 ③ 여기에 붙여넣기<br>
-                → "위치지도 및 매장정보" 버튼이 내 매장 페이지로 정확히 연결돼요.
+                → <strong>주소와 좌표가 네이버 기준으로 자동 입력</strong>되고, "위치지도 및 매장정보" 버튼이 내 매장 페이지로 연결돼요.
               </p>
             </div>
+
+            <div class="form-group">
+              <label class="form-label">주소</label>
+              <input class="form-input" name="address" value="${Utils.escapeHtml(s.address || '')}" placeholder="네이버 링크를 넣으면 자동으로 채워져요">
+            </div>
+            <div style="display:flex;gap:12px">
+              <div class="form-group" style="flex:1">
+                <label class="form-label">위도</label>
+                <input class="form-input" name="lat" type="number" step="any" value="${s.location?.lat || ''}" placeholder="자동 입력">
+              </div>
+              <div class="form-group" style="flex:1">
+                <label class="form-label">경도</label>
+                <input class="form-input" name="lng" type="number" step="any" value="${s.location?.lng || ''}" placeholder="자동 입력">
+              </div>
+            </div>
+            <div id="coords-result"></div>
+            <p class="editor-hint">
+              네이버 링크가 없을 때만:
+              <a href="javascript:void(0)" onclick="BusinessPage.findCoords()" id="find-coords-btn" style="color:var(--secondary);text-decoration:underline">주소로 좌표 찾기</a>
+            </p>
           </div>
 
           <!-- ===== 9. 운영시간 ===== -->
@@ -532,8 +533,7 @@ const BusinessPage = {
       return;
     }
 
-    btn.disabled = true;
-    btn.innerHTML = '<div class="loading-spinner" style="width:16px;height:16px;border-width:2px"></div>';
+    btn.textContent = '찾는 중...';
     resultEl.innerHTML = '';
 
     try {
@@ -578,8 +578,7 @@ const BusinessPage = {
         </div>`;
     }
 
-    btn.disabled = false;
-    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">search</span> 좌표 찾기';
+    btn.textContent = '주소로 좌표 찾기';
   },
 
   selectCoords(lat, lon, displayName) {
@@ -593,13 +592,52 @@ const BusinessPage = {
       </div>`;
   },
 
-  checkNaverLink(text) {
+  _naverLookupFor: '',
+
+  async _fetchNaverPlace(link) {
+    try {
+      const r = await fetch('/api/naver-place?url=' + encodeURIComponent(link));
+      return r.ok ? await r.json() : null;
+    } catch (_) { return null; }
+  },
+
+  _applyNaverPlace(place) {
+    const form = document.getElementById('store-form');
+    if (!form || !place) return;
+    form.lat.value = place.lat;
+    form.lng.value = place.lng;
+    if (place.roadAddress || place.address) form.address.value = place.roadAddress || place.address;
+  },
+
+  // 링크를 붙여넣으면 네이버 기준 주소·좌표 자동 입력
+  async checkNaverLink(text) {
     const el = document.getElementById('naver-link-status');
     if (!el) return;
-    if (!text.trim()) { el.innerHTML = ''; return; }
-    el.innerHTML = Utils.extractNaverMapUrl(text)
-      ? '<span style="color:#2E7D32;font-weight:600">✓ 네이버 지도 링크가 확인됐어요</span>'
-      : '<span style="color:var(--error)">네이버 지도 링크가 없어요. 공유 → 복사한 내용을 붙여넣어 주세요.</span>';
+    const link = Utils.extractNaverMapUrl(text);
+    if (!text.trim()) { el.innerHTML = ''; this._naverLookupFor = ''; return; }
+    if (!link) {
+      this._naverLookupFor = '';
+      el.innerHTML = '<span style="color:var(--error)">네이버 지도 링크가 없어요. 공유 → 복사한 내용을 붙여넣어 주세요.</span>';
+      return;
+    }
+    if (link === this._naverLookupFor) return;
+    this._naverLookupFor = link;
+    el.innerHTML = '<span style="color:var(--secondary)">네이버에서 매장 위치를 가져오는 중...</span>';
+
+    const place = await this._fetchNaverPlace(link);
+    if (this._naverLookupFor !== link) return;
+    if (!place) {
+      this._naverLookupFor = '';
+      el.innerHTML = '<span style="color:#B36B00">링크는 확인됐지만 위치를 가져오지 못했어요. 링크는 그대로 저장되고, 좌표는 아래 "주소로 좌표 찾기"를 이용해 주세요.</span>';
+      return;
+    }
+    this._applyNaverPlace(place);
+    el.innerHTML = `
+      <div style="background:#E8F5E9;border-radius:8px;padding:10px 12px;color:#2E7D32">
+        <div style="font-weight:700">✓ ${Utils.escapeHtml(place.name)}</div>
+        <div style="color:var(--secondary);margin-top:2px">${Utils.escapeHtml(place.roadAddress || place.address)}</div>
+        <div style="font-size:0.75rem;margin-top:4px">주소와 좌표를 네이버 기준으로 채웠어요</div>
+      </div>`;
   },
 
   // --- 저장 ---
@@ -616,6 +654,7 @@ const BusinessPage = {
       form.naverMapUrl.focus();
       return;
     }
+    if (naverMapUrl && !form.lat.value) this._applyNaverPlace(await this._fetchNaverPlace(naverMapUrl));
 
     btn.disabled = true;
     btn.innerHTML = '<div class="loading-spinner" style="width:20px;height:20px;border-width:2px"></div> 저장 중...';

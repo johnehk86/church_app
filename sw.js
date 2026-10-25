@@ -1,4 +1,4 @@
-const CACHE_NAME = 'church-store-v6';
+const CACHE_NAME = 'church-store-v7';
 const STATIC_ASSETS = [
   './css/style.css',
   './assets/icons/church-logo.png',
@@ -32,6 +32,11 @@ self.addEventListener('fetch', (event) => {
 
   // 외부 URL은 무시
   if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
+  // 서버 API는 캐시하지 않음
+  if (new URL(event.request.url).pathname.startsWith('/api/')) {
     return;
   }
 
