@@ -47,20 +47,15 @@ const AuthService = {
   async _loadUserData(uid) {
     try {
       const doc = await db.collection('users').doc(uid).get();
+      const pending = this._pendingSignupRole;
+      this._pendingSignupRole = null;
       if (doc.exists) {
         this._userData = doc.data();
+        if (pending) Toast.show('이미 가입된 계정이에요. 로그인되었습니다.', 'info');
       } else if (!this._signingUp) {
-        // 첫 Google 로그인 - 사업자 코드 입력 기회 제공
-        let role = 'member';
-        const bizCode = prompt('사장님이시면 사업자 코드를 입력하세요.\n일반 성도는 그냥 취소를 누르세요.');
-        if (bizCode) {
-          if (bizCode.trim() === '0316') {
-            role = 'business';
-            Toast.show('사장님 가입 완료!', 'success');
-          } else {
-            Toast.show('사업자 코드가 올바르지 않습니다. 일반 성도로 가입됩니다.', 'error');
-          }
-        }
+        // Google 신규 가입: 가입 화면에서 고른 유형, 없으면 일반 성도
+        const role = pending || 'member';
+        Toast.show(role === 'business' ? '사장님 가입이 완료되었습니다!' : '가입이 완료되었습니다!', 'success');
         const newUser = {
           email: this._currentUser.email || '',
           name: this._currentUser.displayName || '성도',
@@ -102,14 +97,20 @@ const AuthService = {
     return !!this._currentUser;
   },
 
-  // --- Google 로그인 ---
-  signInWithGoogle() {
+  isValidBizCode(code) {
+    return (code || '').trim() === this.BUSINESS_SECRET_CODE;
+  },
+
+  // --- Google 로그인 / 가입 (signupRole: 가입 화면에서 고른 유형) ---
+  signInWithGoogle(signupRole) {
+    this._pendingSignupRole = signupRole || null;
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    auth.signInWithPopup(provider).then(function(result) {
-      Toast.show('로그인 성공!', 'success');
+    auth.signInWithPopup(provider).then(() => {
+      if (!signupRole) Toast.show('로그인 성공!', 'success');
       App.navigate('#/');
-    }).catch(function(e) {
+    }).catch((e) => {
+      this._pendingSignupRole = null;
       console.error('Google 로그인 실패:', e);
       if (e.code !== 'auth/popup-closed-by-user') {
         Toast.show('로그인에 실패했습니다.', 'error');
@@ -134,19 +135,8 @@ const AuthService = {
   },
 
   // --- 이메일/비밀번호 회원가입 ---
-  async signUp(email, password, name, bizCode) {
+  async signUp(email, password, name, role) {
     try {
-      // 사업자 코드 확인
-      let role = 'member';
-      if (bizCode) {
-        if (bizCode.trim() === '0316') {
-          role = 'business';
-        } else {
-          Toast.show('사업자 코드가 올바르지 않습니다.', 'error');
-          return false;
-        }
-      }
-
       this._signingUp = true;
       const result = await auth.createUserWithEmailAndPassword(email, password);
       await result.user.updateProfile({ displayName: name });
@@ -161,6 +151,7 @@ const AuthService = {
       Toast.show(role === 'business' ? '사장님 가입이 완료되었습니다!' : '가입이 완료되었습니다!', 'success');
       return true;
     } catch (e) {
+      this._signingUp = false;
       console.error('회원가입 실패:', e);
       if (e.code === 'auth/email-already-in-use') Toast.show('이미 사용 중인 이메일입니다.', 'error');
       else if (e.code === 'auth/weak-password') Toast.show('비밀번호는 6자 이상이어야 합니다.', 'error');
