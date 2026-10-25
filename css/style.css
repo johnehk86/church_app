@@ -1635,3 +1635,18 @@ input, textarea, select {
     gap: 16px;
   }
 }
+
+/* 쿠폰 기간 달력 (flatpickr range) */
+.coupon-range-calendar + .flatpickr-calendar.inline { margin: 0 auto; box-shadow: none; border: 1px solid var(--outline-variant); border-radius: 12px; }
+.flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange,
+.flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+.flatpickr-day.inRange, .flatpickr-day.inRange:hover {
+  background: var(--accent-light); border-color: var(--accent-light); color: #1a1a1a;
+  box-shadow: -5px 0 0 var(--accent-light), 5px 0 0 var(--accent-light);
+}
+.flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n+1)),
+.flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n+1)),
+.flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n+1)) { box-shadow: -10px 0 0 var(--accent); }
+.flatpickr-day.today { border-color: var(--accent); }

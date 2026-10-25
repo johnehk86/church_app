@@ -268,17 +268,17 @@ const BusinessPage = {
                     <input class="form-input" id="coupon-count-input" type="number" min="1" placeholder="10">
                   </div>
                 </div>
-                <div style="display:flex;gap:12px">
-                  <div class="form-group" style="flex:1">
-                    <label class="form-label">시작일</label>
-                    <input class="form-input" id="coupon-starts-input" type="date">
+                <div class="form-group">
+                  <label class="form-label">사용 기간</label>
+                  <p class="editor-hint" style="margin-bottom:8px">달력에서 <strong>시작일</strong>을 누르고, 이어서 <strong>종료일</strong>을 누르세요.</p>
+                  <div id="coupon-range-calendar" class="coupon-range-calendar"></div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;background:var(--surface-container);border-radius:10px;padding:10px 12px">
+                    <span id="coupon-range-summary" style="font-size:0.875rem;font-weight:600"></span>
+                    <button type="button" onclick="BusinessPage.clearCouponRange()" style="background:none;border:none;color:var(--secondary);font-size:0.8125rem;text-decoration:underline;cursor:pointer;flex-shrink:0">지우기</button>
                   </div>
-                  <div class="form-group" style="flex:1">
-                    <label class="form-label">종료일 (선택)</label>
-                    <input class="form-input" id="coupon-expires-input" type="date">
-                  </div>
+                  <input type="hidden" id="coupon-starts-input">
+                  <input type="hidden" id="coupon-expires-input">
                 </div>
-                <p class="editor-hint" style="margin-top:-8px;margin-bottom:12px">시작일을 비우면 오늘부터, 종료일을 비우면 기한 없이 사용할 수 있어요.</p>
                 <div class="form-group">
                   <label class="form-label">다른 할인과 중복 사용</label>
                   <div style="display:flex;gap:8px">
@@ -698,6 +698,50 @@ const BusinessPage = {
   showCouponForm() {
     document.getElementById('business-coupon-form').style.display = 'block';
     document.getElementById('show-coupon-form-btn').style.display = 'none';
+    this._initCouponRange();
+  },
+
+  _couponPicker: null,
+
+  _initCouponRange() {
+    if (this._couponPicker) this._couponPicker.destroy();
+    const el = document.getElementById('coupon-range-calendar');
+    if (!el || typeof flatpickr === 'undefined') return;
+    this._couponPicker = flatpickr(el, {
+      inline: true,
+      mode: 'range',
+      minDate: 'today',
+      locale: 'ko',
+      disableMobile: true,
+      onChange: (dates) => this._applyCouponRange(dates)
+    });
+    this._applyCouponRange([]);
+  },
+
+  // toISOString은 UTC 기준이라 한국 시간에서 하루 밀릴 수 있어 직접 포맷
+  _ymd(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  },
+
+  _applyCouponRange(dates) {
+    const [start, end] = dates;
+    const fmt = d => d.toLocaleDateString('ko-KR');
+    document.getElementById('coupon-starts-input').value = start ? this._ymd(start) : '';
+    document.getElementById('coupon-expires-input').value = start ? this._ymd(end || start) : '';
+    const summary = document.getElementById('coupon-range-summary');
+    if (!start) {
+      summary.innerHTML = '<span style="color:var(--secondary);font-weight:400">기간 미선택 · 오늘부터 기한 없이 사용</span>';
+    } else if (!end) {
+      summary.innerHTML = `${fmt(start)} 하루 <span style="color:var(--secondary);font-weight:400;font-size:0.75rem">(종료일을 누르면 기간이 돼요)</span>`;
+    } else {
+      const days = Math.round((end - start) / 86400000) + 1;
+      summary.innerHTML = `${fmt(start)} ~ ${fmt(end)} <span style="color:var(--accent)">· ${days}일간</span>`;
+    }
+  },
+
+  clearCouponRange() {
+    this._couponPicker?.clear();
+    this._applyCouponRange([]);
   },
 
   hideCouponForm() {
