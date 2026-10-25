@@ -7,13 +7,6 @@ const HomePage = {
   _searchTimeout: null,
 
   async render(container) {
-    const categoryChips = Utils.categories.map(cat => `
-      <button class="category-chip ${cat === this._selectedCategory ? 'category-chip--active' : ''}"
-              onclick="HomePage.filterByCategory('${cat}')">
-        ${cat}
-      </button>
-    `).join('');
-
     container.innerHTML = `
       <div class="page">
         <div class="search-bar">
@@ -26,7 +19,7 @@ const HomePage = {
           <h2 class="headline-md">Discover</h2>
           <p class="label-caps" style="margin-top:6px;margin-bottom:0">성도 매장 둘러보기</p>
         </header>
-        <div class="category-filter">${categoryChips}</div>
+        <div class="category-filter" id="category-filter"></div>
         <div id="store-list">
           <div class="loading-screen"><div class="loading-spinner"></div></div>
         </div>
@@ -40,7 +33,47 @@ const HomePage = {
       </div>
     `;
 
-    await this.loadStores();
+    await Promise.all([this._renderCategoryChips(), this.loadStores()]);
+  },
+
+  // 순서는 앱을 열 때 한 번만 정해서, 보는 도중에는 칩이 움직이지 않게 함
+  _categoryOrder: null,
+
+  _getClickCounts() {
+    try { return JSON.parse(localStorage.getItem('category-clicks')) || {}; } catch (_) { return {}; }
+  },
+
+  _recordClick(category) {
+    if (category === '전체') return;
+    try {
+      const counts = this._getClickCounts();
+      counts[category] = (counts[category] || 0) + 1;
+      localStorage.setItem('category-clicks', JSON.stringify(counts));
+    } catch (_) {}
+  },
+
+  _getOrderedCategories() {
+    if (!this._categoryOrder) {
+      const counts = this._getClickCounts();
+      const rest = Utils.categories.filter(c => c !== '전체')
+        .sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
+      this._categoryOrder = ['전체', ...rest];
+    }
+    return this._categoryOrder;
+  },
+
+  async _renderCategoryChips() {
+    const stores = await StoreService.getPublic();
+    const used = new Set(stores.map(s => s.category));
+    const el = document.getElementById('category-filter');
+    if (!el) return;
+    el.innerHTML = this._getOrderedCategories()
+      .filter(c => c === '전체' || used.has(c) || c === this._selectedCategory)
+      .map(cat => `
+        <button class="category-chip ${cat === this._selectedCategory ? 'category-chip--active' : ''}"
+                onclick="HomePage.filterByCategory('${cat}')">
+          ${cat}
+        </button>`).join('');
   },
 
   async loadStores() {
@@ -85,6 +118,7 @@ const HomePage = {
   },
 
   filterByCategory(category) {
+    if (category !== this._selectedCategory) this._recordClick(category);
     this._selectedCategory = category;
     this._searchQuery = '';
     this.render(document.getElementById('app-content'));
