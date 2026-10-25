@@ -308,6 +308,7 @@ const LoginPage = {
               <div style="font-size:0.8125rem;color:var(--secondary);margin-bottom:2px">${Utils.escapeHtml(c.storeName || '')}</div>
               <div style="font-weight:600;font-size:0.9375rem;margin-bottom:6px">${Utils.escapeHtml(c.couponTitle || '')}</div>
               <span style="background:var(--accent);color:white;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">${c.discount}% 할인</span>
+              ${CouponService.stackingBadge(c)}
               ${CouponService.periodText(c) ? `<span style="font-size:0.75rem;color:var(--secondary);margin-left:6px">${CouponService.periodText(c)}</span>` : ''}
             </div>
             <div style="flex-shrink:0">
@@ -340,7 +341,9 @@ const LoginPage = {
         <div style="font-size:0.875rem;color:var(--secondary);margin-top:8px">${Utils.escapeHtml(c.storeName || '')}</div>
         <h2 style="font-family:var(--font-display);font-size:1.375rem;font-weight:700;margin:8px 0 16px">${Utils.escapeHtml(c.couponTitle || '')}</h2>
         <div style="font-size:4rem;font-weight:900;color:var(--accent);line-height:1">${c.discount}%</div>
-        <div style="font-size:1rem;color:var(--secondary);margin:4px 0 20px">할인 쿠폰</div>
+        <div style="font-size:1rem;color:var(--secondary);margin:4px 0 ${typeof c.noStacking === 'boolean' ? '12px' : '20px'}">할인 쿠폰</div>
+        ${c.noStacking === true ? '<div style="border:1.5px solid #C62828;color:#C62828;border-radius:12px;padding:10px;margin-bottom:16px;font-size:0.875rem;font-weight:700">⚠️ 다른 할인·쿠폰과 중복 사용 불가</div>' : ''}
+        ${c.noStacking === false ? '<div style="border:1.5px solid #2E7D32;color:#2E7D32;border-radius:12px;padding:10px;margin-bottom:16px;font-size:0.875rem;font-weight:700">다른 할인과 함께 사용 가능</div>' : ''}
         <div style="background:var(--surface-container);border-radius:12px;padding:12px 16px;margin-bottom:24px">
           <p style="font-size:0.875rem;color:var(--on-surface-variant)">📱 사장님께 이 화면을 보여주세요</p>
         </div>

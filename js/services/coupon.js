@@ -20,6 +20,13 @@ const CouponService = {
     return `${c.startsAt ? fmt(c.startsAt) + ' ' : ''}~ ${c.expiresAt ? fmt(c.expiresAt) : '기한 없음'}`;
   },
 
+  // noStacking 값이 없는 기존 쿠폰은 표시하지 않음
+  stackingBadge(c) {
+    if (c.noStacking === true) return '<span style="border:1px solid #C62828;color:#C62828;padding:1px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">중복 할인 불가</span>';
+    if (c.noStacking === false) return '<span style="border:1px solid #2E7D32;color:#2E7D32;padding:1px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">중복 할인 가능</span>';
+    return '';
+  },
+
   // 매장별 전체 쿠폰 (사장님 관리용)
   async getByStore(storeId) {
     const snap = await db.collection('coupons').where('storeId', '==', storeId).get();
@@ -69,6 +76,7 @@ const CouponService = {
         userId,
         couponTitle: c.title,
         discount: c.discount,
+        noStacking: typeof c.noStacking === 'boolean' ? c.noStacking : null,
         startsAt: c.startsAt || null,
         expiresAt: c.expiresAt || null,
         claimedAt: firebase.firestore.FieldValue.serverTimestamp(),

@@ -73,21 +73,35 @@ const DetailPage = {
     if (activeCoupons.length > 0) {
       const couponHtml = activeCoupons.map(c => {
         const isClaimed = claimedSet.has(c.id);
+        const remaining = Math.max(0, c.totalCount - (c.usedCount || 0));
+        const ratio = c.totalCount ? remaining / c.totalCount : 0;
+        const urgent = remaining <= 3 || ratio <= 0.2;
+        const tone = urgent ? '#C62828' : 'var(--accent)';
         return `
-          <div style="border:2px solid var(--accent-light);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px">
-            <div style="flex:1;min-width:0">
-              <div style="font-weight:600;font-size:0.9375rem;margin-bottom:4px">${Utils.escapeHtml(c.title)}</div>
-              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                <span style="background:var(--accent);color:white;padding:2px 10px;border-radius:20px;font-size:0.8125rem;font-weight:700">${c.discount}% 할인</span>
-                <span style="font-size:0.8125rem;color:var(--secondary)">잔여 ${c.totalCount - (c.usedCount || 0)}장</span>
+          <div style="border:2px solid var(--accent-light);border-radius:14px;padding:16px;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:1rem;margin-bottom:6px">${Utils.escapeHtml(c.title)}</div>
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                  <span style="background:var(--accent);color:white;padding:2px 10px;border-radius:20px;font-size:0.8125rem;font-weight:700">${c.discount}% 할인</span>
+                  ${CouponService.stackingBadge(c)}
+                </div>
+                ${CouponService.periodText(c) ? `<div style="font-size:0.75rem;color:var(--secondary);margin-top:6px">${CouponService.periodText(c)}</div>` : ''}
               </div>
-              ${CouponService.periodText(c) ? `<div style="font-size:0.75rem;color:var(--secondary);margin-top:4px">${CouponService.periodText(c)}</div>` : ''}
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:0.6875rem;color:var(--secondary);font-weight:600">남은 수량</div>
+                <div style="font-size:1.875rem;font-weight:800;color:${tone};line-height:1.1">${remaining}<span style="font-size:0.875rem;font-weight:600;color:var(--secondary)"> / ${c.totalCount}장</span></div>
+                ${urgent ? '<div style="font-size:0.75rem;font-weight:700;color:#C62828">마감 임박!</div>' : ''}
+              </div>
+            </div>
+            <div style="height:6px;background:var(--surface-dim);border-radius:3px;margin:12px 0;overflow:hidden">
+              <div style="width:${Math.round(ratio * 100)}%;height:100%;background:${tone};border-radius:3px"></div>
             </div>
             ${isClaimed
-              ? '<span style="padding:6px 16px;border-radius:20px;background:var(--surface-dim);font-size:0.8125rem;color:var(--secondary);flex-shrink:0">수령완료</span>'
+              ? '<div style="text-align:center;padding:10px;border-radius:12px;background:var(--surface-dim);font-size:0.875rem;color:var(--secondary)">수령완료 · 내 정보 > 내 쿠폰에서 사용하세요</div>'
               : !user
-                ? `<button class="btn btn--secondary btn--small" onclick="App.navigate('#/login')" style="width:auto;flex-shrink:0">로그인</button>`
-                : `<button class="btn btn--primary btn--small" id="claim-btn-${c.id}" onclick="DetailPage.claimCoupon('${c.id}')" style="width:auto;flex-shrink:0">받기</button>`
+                ? `<button class="btn btn--secondary" onclick="App.navigate('#/login')">로그인하고 쿠폰 받기</button>`
+                : `<button class="btn btn--primary" id="claim-btn-${c.id}" onclick="DetailPage.claimCoupon('${c.id}')">쿠폰 받기</button>`
             }
           </div>
         `;
@@ -191,7 +205,7 @@ const DetailPage = {
     } catch (e) {
       const msg = e.message === 'already_claimed' ? '이미 받은 쿠폰입니다.' : (e.message || '쿠폰 수령에 실패했습니다.');
       Toast.show(msg, 'error');
-      if (btn) { btn.disabled = false; btn.textContent = '받기'; }
+      if (btn) { btn.disabled = false; btn.textContent = '쿠폰 받기'; }
     }
   },
 

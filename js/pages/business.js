@@ -279,6 +279,18 @@ const BusinessPage = {
                   </div>
                 </div>
                 <p class="editor-hint" style="margin-top:-8px;margin-bottom:12px">시작일을 비우면 오늘부터, 종료일을 비우면 기한 없이 사용할 수 있어요.</p>
+                <div class="form-group">
+                  <label class="form-label">다른 할인과 중복 사용</label>
+                  <div style="display:flex;gap:8px">
+                    <label style="flex:1;display:flex;align-items:center;gap:6px;padding:10px 12px;border:1px solid var(--outline-variant);border-radius:10px;cursor:pointer;font-size:0.875rem">
+                      <input type="radio" name="coupon-stacking" value="no" checked> 중복 할인 불가
+                    </label>
+                    <label style="flex:1;display:flex;align-items:center;gap:6px;padding:10px 12px;border:1px solid var(--outline-variant);border-radius:10px;cursor:pointer;font-size:0.875rem">
+                      <input type="radio" name="coupon-stacking" value="yes"> 중복 할인 가능
+                    </label>
+                  </div>
+                  <p class="editor-hint" style="margin-top:4px">성도 혜택·다른 쿠폰·행사 할인과 함께 쓸 수 있는지 정해주세요.</p>
+                </div>
                 <div style="display:flex;gap:8px">
                   <button type="button" class="btn btn--primary" onclick="BusinessPage.saveCoupon()" style="flex:1">저장</button>
                   <button type="button" class="btn btn--ghost" onclick="BusinessPage.hideCouponForm()" style="flex:1">취소</button>
@@ -660,6 +672,7 @@ const BusinessPage = {
               <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
                 <span style="background:var(--accent);color:white;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">${c.discount}% 할인</span>
                 <span style="font-size:0.8125rem;color:var(--secondary)">잔여 ${remaining}/${c.totalCount}장</span>
+                ${CouponService.stackingBadge(c)}
                 ${notStarted ? '<span style="font-size:0.75rem;color:#B36B00">시작 전</span>' : ''}
                 ${expired ? '<span style="font-size:0.75rem;color:var(--error)">만료</span>' : ''}
                 ${!c.isActive ? '<span style="font-size:0.75rem;color:var(--secondary)">비활성</span>' : ''}
@@ -710,6 +723,7 @@ const BusinessPage = {
       storeName: this._store.name || '',
       ownerId: user?.id,
       title, discount, totalCount,
+      noStacking: document.querySelector('input[name="coupon-stacking"]:checked')?.value !== 'yes',
       startsAt: startsStr ? firebase.firestore.Timestamp.fromDate(new Date(startsStr + 'T00:00:00')) : null,
       expiresAt: expiresStr ? firebase.firestore.Timestamp.fromDate(new Date(expiresStr + 'T23:59:59')) : null
     };
