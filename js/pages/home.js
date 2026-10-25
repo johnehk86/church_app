@@ -39,30 +39,18 @@ const HomePage = {
       </div>
     `;
 
-    this._renderCategoryChips();
-    await this.loadStores();
+    await Promise.all([this._renderCategoryChips(), this.loadStores()]);
   },
 
   // 순서는 앱을 열 때 한 번만 정해서, 보는 도중에는 칩이 움직이지 않게 함
   _categoryOrder: null,
+  // v2: 기본 정렬이 '최신 매장 순'으로 바뀌면서 예전 기준으로 저장된 순서는 초기화
+  _ORDER_KEY: 'category-order-v2',
 
-  _getClickCounts() {
-    try { return JSON.parse(localStorage.getItem('category-clicks')) || {}; } catch (_) { return {}; }
-  },
-
-  _recordClick(category) {
-    if (category === '전체') return;
-    try {
-      const counts = this._getClickCounts();
-      counts[category] = (counts[category] || 0) + 1;
-      localStorage.setItem('category-clicks', JSON.stringify(counts));
-    } catch (_) {}
-  },
-
-  // 사용자가 직접 정한 순서 (없으면 null → 자주 누른 순)
+  // 사용자가 직접 정한 순서 (없으면 null → 최신 매장 순)
   _getCustomOrder() {
     try {
-      const saved = JSON.parse(localStorage.getItem('category-order'));
+      const saved = JSON.parse(localStorage.getItem(this._ORDER_KEY));
       if (!Array.isArray(saved)) return null;
       const valid = Utils.categories.filter(c => c !== '전체');
       // 나중에 추가된 카테고리는 뒤에 붙이고, 없어진 카테고리는 제거
@@ -70,23 +58,26 @@ const HomePage = {
     } catch (_) { return null; }
   },
 
-  _getOrderedCategories() {
+  // 최근 등록된 매장의 카테고리가 앞으로 (stores는 등록일 최신순), 매장 없는 카테고리는 기본 순서로 뒤에
+  _recentCategoryOrder(stores) {
+    const all = Utils.categories.filter(c => c !== '전체');
+    const recent = [...new Set(stores.map(s => s.category))].filter(c => all.includes(c));
+    return [...recent, ...all.filter(c => !recent.includes(c))];
+  },
+
+  async _getOrderedCategories() {
     if (!this._categoryOrder) {
-      let rest = this._getCustomOrder();
-      if (!rest) {
-        const counts = this._getClickCounts();
-        rest = Utils.categories.filter(c => c !== '전체')
-          .sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
-      }
+      const rest = this._getCustomOrder() || this._recentCategoryOrder(await StoreService.getPublic());
       this._categoryOrder = ['전체', ...rest];
     }
     return this._categoryOrder;
   },
 
-  _renderCategoryChips() {
+  async _renderCategoryChips() {
+    const order = await this._getOrderedCategories();
     const el = document.getElementById('category-filter');
     if (!el) return;
-    el.innerHTML = this._getOrderedCategories().map(cat => `
+    el.innerHTML = order.map(cat => `
         <button class="category-chip ${cat === this._selectedCategory ? 'category-chip--active' : ''} ${cat === '전체' ? 'category-chip--fixed' : ''}"
                 data-cat="${cat}" onclick="HomePage.filterByCategory('${cat}')">
           ${cat}
@@ -112,7 +103,7 @@ const HomePage = {
       onEnd: (evt) => {
         if (evt.oldIndex === evt.newIndex) return;
         const order = [...el.querySelectorAll('[data-cat]')].map(b => b.dataset.cat).filter(c => c !== '전체');
-        try { localStorage.setItem('category-order', JSON.stringify(order)); } catch (_) {}
+        try { localStorage.setItem(this._ORDER_KEY, JSON.stringify(order)); } catch (_) {}
         this._categoryOrder = ['전체', ...order];
         Toast.show('순서를 저장했어요.', 'success');
       }
@@ -122,8 +113,8 @@ const HomePage = {
   // --- 순서 편집 (▲▼ 버튼 방식: 드래그는 좌우 스크롤과 겹쳐 어르신들께 어려움) ---
   _editOrder: [],
 
-  openOrderEditor() {
-    this._editOrder = this._getOrderedCategories().filter(c => c !== '전체');
+  async openOrderEditor() {
+    this._editOrder = (await this._getOrderedCategories()).filter(c => c !== '전체');
     const modal = document.createElement('div');
     modal.id = 'category-order-modal';
     modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;justify-content:center';
@@ -137,7 +128,7 @@ const HomePage = {
         <div id="category-order-list" style="overflow-y:auto;padding:4px 20px;flex:1"></div>
         <div style="padding:12px 20px 28px;display:flex;flex-direction:column;gap:8px">
           <button class="btn btn--primary" onclick="HomePage.saveOrder()">완료</button>
-          <button class="btn btn--ghost" onclick="HomePage.resetOrder()" style="font-size:0.8125rem;color:var(--secondary)">자주 누른 순서로 자동 정렬하기</button>
+          <button class="btn btn--ghost" onclick="HomePage.resetOrder()" style="font-size:0.8125rem;color:var(--secondary)">최신 등록 매장 순으로 되돌리기</button>
         </div>
       </div>`;
     document.body.appendChild(modal);
@@ -170,7 +161,7 @@ const HomePage = {
   },
 
   saveOrder() {
-    try { localStorage.setItem('category-order', JSON.stringify(this._editOrder)); } catch (_) {}
+    try { localStorage.setItem(this._ORDER_KEY, JSON.stringify(this._editOrder)); } catch (_) {}
     this._categoryOrder = null;
     document.getElementById('category-order-modal')?.remove();
     this._renderCategoryChips();
@@ -178,11 +169,11 @@ const HomePage = {
   },
 
   resetOrder() {
-    try { localStorage.removeItem('category-order'); } catch (_) {}
+    try { localStorage.removeItem(this._ORDER_KEY); } catch (_) {}
     this._categoryOrder = null;
     document.getElementById('category-order-modal')?.remove();
     this._renderCategoryChips();
-    Toast.show('자주 누른 순서로 정렬해요.', 'info');
+    Toast.show('최신 등록 매장 순으로 정렬해요.', 'info');
   },
 
   async loadStores() {
@@ -227,7 +218,6 @@ const HomePage = {
   },
 
   filterByCategory(category) {
-    if (category !== this._selectedCategory) this._recordClick(category);
     this._selectedCategory = category;
     this._searchQuery = '';
     this.render(document.getElementById('app-content'));
