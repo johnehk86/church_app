@@ -283,7 +283,7 @@ const LoginPage = {
     const section = document.getElementById('my-coupons-section');
     if (!section) return;
     try {
-      this._myCoupons = await CouponService.getMyCoupons(userId);
+      this._myCoupons = (await CouponService.getMyCoupons(userId)).filter(c => !c.hidden);
     } catch (e) {
       this._myCoupons = [];
     }
@@ -311,19 +311,32 @@ const LoginPage = {
               ${CouponService.stackingBadge(c)}
               ${CouponService.periodText(c) ? `<span style="font-size:0.75rem;color:var(--secondary);margin-left:6px">${CouponService.periodText(c)}</span>` : ''}
             </div>
-            <div style="flex-shrink:0">
+            <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px">
               ${c.isUsed
                 ? '<span style="font-size:0.75rem;color:var(--secondary);background:var(--surface-dim);padding:5px 10px;border-radius:8px;white-space:nowrap">사용완료</span>'
                 : expired
                   ? '<span style="font-size:0.75rem;color:var(--secondary);background:var(--surface-dim);padding:5px 10px;border-radius:8px">만료됨</span>'
                   : `<button class="btn btn--primary btn--small" onclick="LoginPage.showCouponModal(${i})" style="width:auto;font-size:0.8125rem">사용하기</button>`
               }
+              ${inactive ? `<button onclick="LoginPage.hideCoupon('${c.id}')" style="display:flex;align-items:center;gap:2px;background:none;border:1px solid var(--outline-variant);border-radius:8px;padding:4px 8px;font-size:0.75rem;color:var(--secondary);cursor:pointer;white-space:nowrap"><span class="material-symbols-outlined" style="font-size:14px">close</span>지우기</button>` : ''}
             </div>
           </div>
         </div>
       `;
     }).join('');
     section.innerHTML = header + html;
+  },
+
+  // 실제 삭제 대신 숨김 (사장님 쪽 사용 기록은 유지)
+  async hideCoupon(claimId) {
+    try {
+      await CouponService.hideClaim(claimId);
+      Toast.show('쿠폰을 목록에서 지웠어요.', 'info');
+      await this._loadMyCoupons(AuthService.getCurrentUser().id);
+    } catch (e) {
+      console.error('쿠폰 숨기기 실패:', e);
+      Toast.show('처리에 실패했습니다.', 'error');
+    }
   },
 
   showCouponModal(index) {

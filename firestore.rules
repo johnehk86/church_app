@@ -44,8 +44,12 @@ service cloud.firestore {
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master');
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('removed', false) == false;
+      // 성도 본인은 사용 처리·숨김만 가능 (사용완료를 미사용으로 되돌려 재사용하는 것 차단)
       allow update: if request.auth != null &&
-        (resource.data.userId == request.auth.uid || resource.data.ownerId == request.auth.uid ||
+        ((resource.data.userId == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isUsed', 'usedAt', 'hidden']) &&
+          (resource.data.isUsed == false || request.resource.data.isUsed == true)) ||
+         resource.data.ownerId == request.auth.uid ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master');
       allow delete: if false;
     }

@@ -102,6 +102,10 @@ const CouponService = {
       .sort((a, b) => (b.claimedAt?.seconds || 0) - (a.claimedAt?.seconds || 0));
   },
 
+  async hideClaim(claimId) {
+    await db.collection('couponClaims').doc(claimId).update({ hidden: true });
+  },
+
   // 쿠폰 사용 처리
   async markUsed(claimId) {
     await db.collection('couponClaims').doc(claimId).update({
