@@ -256,6 +256,7 @@ const BusinessPage = {
                 ${this._renderCouponList()}
               </div>
               <div id="business-coupon-form" style="display:none;border:1px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:12px;background:var(--surface-container)">
+                <div id="coupon-form-title" style="font-weight:700;margin-bottom:12px">새 쿠폰</div>
                 <div class="form-group">
                   <label class="form-label">쿠폰 제목</label>
                   <input class="form-input" id="coupon-title-input" placeholder="예: 첫 방문 10% 할인, 성도 특별 혜택">
@@ -264,6 +265,7 @@ const BusinessPage = {
                   <div class="form-group" style="flex:1">
                     <label class="form-label">할인율 (%)</label>
                     <input class="form-input" id="coupon-discount-input" type="number" min="1" max="100" placeholder="10">
+                    <p class="editor-hint" id="coupon-discount-hint" style="display:none;margin-top:4px">이미 받은 성도님이 있어 할인율은 바꿀 수 없어요.</p>
                   </div>
                   <div class="form-group" style="flex:1">
                     <label class="form-label">발행 매수</label>
@@ -294,7 +296,7 @@ const BusinessPage = {
                   <p class="editor-hint" style="margin-top:4px">성도 혜택·다른 쿠폰·행사 할인과 함께 쓸 수 있는지 정해주세요.</p>
                 </div>
                 <div style="display:flex;gap:8px">
-                  <button type="button" class="btn btn--primary" onclick="BusinessPage.saveCoupon()" style="flex:1">저장</button>
+                  <button type="button" class="btn btn--primary" id="coupon-save-btn" onclick="BusinessPage.saveCoupon()" style="flex:1">저장</button>
                   <button type="button" class="btn btn--ghost" onclick="BusinessPage.hideCouponForm()" style="flex:1">취소</button>
                 </div>
               </div>
@@ -755,6 +757,10 @@ const BusinessPage = {
               ${period ? `<div style="font-size:0.75rem;color:var(--secondary);margin-top:4px">${period}</div>` : ''}
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0">
+              <button type="button" onclick="BusinessPage.editCoupon('${c.id}')"
+                      style="padding:4px 10px;border:1px solid var(--accent);border-radius:8px;background:white;font-size:0.75rem;color:var(--accent);cursor:pointer">
+                수정
+              </button>
               <button type="button" onclick="BusinessPage.toggleCoupon('${c.id}', ${!c.isActive})"
                       style="padding:4px 10px;border:1px solid var(--outline-variant);border-radius:8px;background:white;font-size:0.75rem;cursor:pointer">
                 ${c.isActive ? '끄기' : '켜기'}
@@ -770,22 +776,58 @@ const BusinessPage = {
     }).join('');
   },
 
+  _editingCouponId: null,
+
   showCouponForm() {
-    document.getElementById('business-coupon-form').style.display = 'block';
-    document.getElementById('show-coupon-form-btn').style.display = 'none';
-    this._initCouponRange();
+    this._editingCouponId = null;
+    this._openCouponForm();
+  },
+
+  _openCouponForm(coupon) {
+    const $ = id => document.getElementById(id);
+    $('business-coupon-form').style.display = 'block';
+    $('show-coupon-form-btn').style.display = 'none';
+    $('coupon-form-title').textContent = coupon ? '쿠폰 수정' : '새 쿠폰';
+    $('coupon-save-btn').textContent = coupon ? '수정 저장' : '저장';
+    $('coupon-title-input').value = coupon?.title || '';
+    $('coupon-discount-input').value = coupon?.discount || '';
+    $('coupon-count-input').value = coupon?.totalCount || '';
+    const locked = !!(coupon && coupon.usedCount > 0);
+    $('coupon-discount-input').disabled = locked;
+    $('coupon-discount-hint').style.display = locked ? 'block' : 'none';
+    $('coupon-count-input').min = coupon?.usedCount || 1;
+    const stacking = coupon?.noStacking === false ? 'yes' : 'no';
+    document.querySelector(`input[name="coupon-stacking"][value="${stacking}"]`).checked = true;
+
+    const start = coupon?.startsAt?.toDate();
+    const end = coupon?.expiresAt?.toDate();
+    // 이미 진행 중인 쿠폰은 지난 시작일도 달력에 표시돼야 함
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    this._initCouponRange(start && start < today ? start : 'today');
+    if (start) {
+      this._couponPicker?.setDate(end ? [start, end] : [start], false);
+      this._applyCouponRange(end ? [start, end] : [start]);
+    }
+    $('business-coupon-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+
+  editCoupon(couponId) {
+    const coupon = this._coupons.find(c => c.id === couponId);
+    if (!coupon) return;
+    this._editingCouponId = couponId;
+    this._openCouponForm(coupon);
   },
 
   _couponPicker: null,
 
-  _initCouponRange() {
+  _initCouponRange(minDate = 'today') {
     if (this._couponPicker) this._couponPicker.destroy();
     const el = document.getElementById('coupon-range-calendar');
     if (!el || typeof flatpickr === 'undefined') return;
     this._couponPicker = flatpickr(el, {
       inline: true,
       mode: 'range',
-      minDate: 'today',
+      minDate,
       locale: 'ko',
       disableMobile: true,
       onChange: (dates) => this._applyCouponRange(dates)
@@ -820,6 +862,7 @@ const BusinessPage = {
   },
 
   hideCouponForm() {
+    this._editingCouponId = null;
     document.getElementById('business-coupon-form').style.display = 'none';
     document.getElementById('show-coupon-form-btn').style.display = 'flex';
   },
@@ -836,25 +879,35 @@ const BusinessPage = {
     if (!totalCount || totalCount < 1) { Toast.show('발행 매수를 입력하세요.', 'error'); return; }
     if (startsStr && expiresStr && expiresStr < startsStr) { Toast.show('종료일이 시작일보다 빠릅니다.', 'error'); return; }
 
-    const user = AuthService.getCurrentUser();
-    const couponData = {
-      storeId: this._store.id,
-      storeName: this._store.name || '',
-      ownerId: user?.id,
-      title, discount, totalCount,
+    const editing = this._editingCouponId ? this._coupons.find(c => c.id === this._editingCouponId) : null;
+    if (editing && totalCount < (editing.usedCount || 0)) {
+      Toast.show(`이미 ${editing.usedCount}장이 나갔어요. 발행 매수는 ${editing.usedCount}장 이상이어야 해요.`, 'error');
+      return;
+    }
+
+    const fields = {
+      title, totalCount,
+      discount: editing && editing.usedCount > 0 ? editing.discount : discount,
       noStacking: document.querySelector('input[name="coupon-stacking"]:checked')?.value !== 'yes',
       startsAt: startsStr ? firebase.firestore.Timestamp.fromDate(new Date(startsStr + 'T00:00:00')) : null,
       expiresAt: expiresStr ? firebase.firestore.Timestamp.fromDate(new Date(expiresStr + 'T23:59:59')) : null
     };
 
     try {
-      await CouponService.create(couponData);
-      Toast.show('쿠폰이 등록되었습니다!', 'success');
+      if (editing) {
+        await CouponService.update(editing.id, fields);
+        Toast.show('쿠폰이 수정되었습니다!', 'success');
+      } else {
+        const user = AuthService.getCurrentUser();
+        await CouponService.create({ ...fields, storeId: this._store.id, storeName: this._store.name || '', ownerId: user?.id });
+        Toast.show('쿠폰이 등록되었습니다!', 'success');
+      }
+      this._editingCouponId = null;
       this._coupons = await CouponService.getByStore(this._store.id);
       this._reRenderForm();
     } catch (e) {
-      console.error('쿠폰 등록 실패:', e);
-      Toast.show('쿠폰 등록에 실패했습니다.', 'error');
+      console.error('쿠폰 저장 실패:', e);
+      Toast.show('쿠폰 저장에 실패했습니다.', 'error');
     }
   },
 

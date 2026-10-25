@@ -111,6 +111,32 @@ const CouponService = {
   },
 
   // 쿠폰 활성화/비활성화
+  // 쿠폰 수정 + 이미 받은 성도 쿠폰(couponClaims)에 복사된 정보도 함께 갱신
+  async update(couponId, fields) {
+    await db.collection('coupons').doc(couponId).update({
+      ...fields,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    try {
+      let q = db.collection('couponClaims').where('couponId', '==', couponId);
+      // 사장님은 본인 소유 수령 내역만 조회 가능 (보안 규칙)
+      if (AuthService.getUserRole() !== 'master') q = q.where('ownerId', '==', AuthService.getCurrentUser().id);
+      const snap = await q.get();
+      if (snap.empty) return;
+      const batch = db.batch();
+      snap.docs.forEach(d => batch.update(d.ref, {
+        couponTitle: fields.title,
+        discount: fields.discount,
+        noStacking: fields.noStacking,
+        startsAt: fields.startsAt,
+        expiresAt: fields.expiresAt
+      }));
+      await batch.commit();
+    } catch (e) {
+      console.warn('받은 쿠폰 정보 갱신 실패:', e);
+    }
+  },
+
   async toggleActive(couponId, isActive) {
     await db.collection('coupons').doc(couponId).update({ isActive });
   },
