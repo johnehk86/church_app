@@ -21,6 +21,8 @@ const LoginPage = {
     const roleClass = userData?.role || 'member';
     // 쿠폰 비동기 로드 (렌더 후)
     setTimeout(() => this._loadMyCoupons(user.id), 0);
+    const isOwner = roleClass === 'business' || roleClass === 'master';
+    if (isOwner) setTimeout(() => this._loadMyStoreStatus(user.id), 0);
 
     container.innerHTML = `
       <div class="page login-page">
@@ -29,9 +31,10 @@ const LoginPage = {
         </div>
         <h2 class="login-page__title">${Utils.escapeHtml(user.name)}</h2>
         <p class="login-page__subtitle">${Utils.escapeHtml(user.email)}</p>
-        <div style="margin-bottom:32px">
+        <div style="margin-bottom:${isOwner ? '20px' : '32px'}">
           <span class="badge">${roleLabels[roleClass] || 'Member'}</span>
         </div>
+        ${isOwner ? '<div id="my-store-status" style="width:100%;max-width:320px;margin-bottom:20px"></div>' : ''}
         <div class="login-buttons">
           ${roleClass === 'business' || roleClass === 'master' ? `
             <button class="btn btn--primary" onclick="App.navigate('#/my-store')">
@@ -248,6 +251,32 @@ const LoginPage = {
   chooseSignupRole(role) {
     this._signupRole = role;
     this.setMode('signup');
+  },
+
+  async _loadMyStoreStatus(userId) {
+    const el = document.getElementById('my-store-status');
+    if (!el) return;
+    const store = await StoreService.getByOwnerId(userId);
+    if (!document.getElementById('my-store-status')) return;
+
+    const s = !store
+      ? { icon: 'add_business', color: 'var(--secondary)', bg: 'var(--surface-container)', title: '아직 등록된 매장이 없어요', desc: '눌러서 내 매장을 등록해 보세요' }
+      : {
+          pending: { icon: 'hourglass_top', color: '#B36B00', bg: '#FFF4E5', title: '승인 대기 중', desc: '관리자 승인 후 성도님들께 공개됩니다' },
+          active:  { icon: 'check_circle',  color: '#2E7D32', bg: '#E8F5E9', title: '영업중 · 공개되고 있어요', desc: '성도님들이 매장을 볼 수 있습니다' },
+          closed:  { icon: 'block',         color: '#C62828', bg: '#FDECEC', title: '폐점 처리됨', desc: '현재 공개되지 않습니다. 관리자에게 문의하세요' }
+        }[store.status || 'active'];
+
+    el.innerHTML = `
+      <button onclick="App.navigate('#/my-store')" style="width:100%;display:flex;align-items:center;gap:12px;background:${s.bg};border:none;border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left">
+        <span class="material-symbols-outlined" style="color:${s.color};font-size:28px;flex-shrink:0">${s.icon}</span>
+        <span style="flex:1;min-width:0">
+          ${store ? `<span style="display:block;font-size:0.75rem;color:var(--secondary)">내 매장 · ${Utils.escapeHtml(store.name)}</span>` : ''}
+          <span style="display:block;font-weight:700;font-size:0.9375rem;color:${s.color}">${s.title}</span>
+          <span style="display:block;font-size:0.75rem;color:var(--secondary);margin-top:2px">${s.desc}</span>
+        </span>
+        <span class="material-symbols-outlined" style="color:var(--outline)">chevron_right</span>
+      </button>`;
   },
 
   async _loadMyCoupons(userId) {

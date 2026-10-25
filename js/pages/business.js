@@ -618,9 +618,11 @@ const BusinessPage = {
         const isMaster = AuthService.getUserRole() === 'master';
         await StoreService.create({ ...storeData, status: isMaster ? 'active' : 'pending' });
         Toast.show(isMaster ? '매장이 등록되었습니다!' : '등록 신청 완료! 관리자 승인 후 공개됩니다.', 'success');
+        if (!isMaster) { App.navigate('#/login'); return; }
       } else {
         await StoreService.update(this._store.id, storeData);
         Toast.show('저장되었습니다!', 'success');
+        if (!StoreService.isOpen(this._store)) { App.navigate('#/login'); return; }
       }
 
       App.navigate('#/');
