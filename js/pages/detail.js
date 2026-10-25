@@ -81,7 +81,7 @@ const DetailPage = {
                 <span style="background:var(--accent);color:white;padding:2px 10px;border-radius:20px;font-size:0.8125rem;font-weight:700">${c.discount}% 할인</span>
                 <span style="font-size:0.8125rem;color:var(--secondary)">잔여 ${c.totalCount - (c.usedCount || 0)}장</span>
               </div>
-              ${c.expiresAt ? `<div style="font-size:0.75rem;color:var(--secondary);margin-top:4px">~ ${c.expiresAt.toDate().toLocaleDateString('ko-KR')}</div>` : ''}
+              ${CouponService.periodText(c) ? `<div style="font-size:0.75rem;color:var(--secondary);margin-top:4px">${CouponService.periodText(c)}</div>` : ''}
             </div>
             ${isClaimed
               ? '<span style="padding:6px 16px;border-radius:20px;background:var(--surface-dim);font-size:0.8125rem;color:var(--secondary);flex-shrink:0">수령완료</span>'

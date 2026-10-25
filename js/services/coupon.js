@@ -13,6 +13,13 @@ const CouponService = {
     return ref.id;
   },
 
+  // "2026. 10. 25. ~ 2026. 11. 30." 형식 (없는 쪽은 생략)
+  periodText(c) {
+    const fmt = t => t.toDate().toLocaleDateString('ko-KR');
+    if (!c.startsAt && !c.expiresAt) return '';
+    return `${c.startsAt ? fmt(c.startsAt) + ' ' : ''}~ ${c.expiresAt ? fmt(c.expiresAt) : '기한 없음'}`;
+  },
+
   // 매장별 전체 쿠폰 (사장님 관리용)
   async getByStore(storeId) {
     const snap = await db.collection('coupons').where('storeId', '==', storeId).get();
@@ -26,6 +33,7 @@ const CouponService = {
     const now = new Date();
     return all.filter(c => {
       if (!c.isActive) return false;
+      if (c.startsAt && c.startsAt.toDate() > now) return false;
       if (c.expiresAt && c.expiresAt.toDate() < now) return false;
       if (c.usedCount >= c.totalCount) return false;
       return true;
@@ -49,6 +57,7 @@ const CouponService = {
       const c = couponSnap.data();
       if (!c.isActive) throw new Error('비활성화된 쿠폰입니다.');
       if (c.usedCount >= c.totalCount) throw new Error('쿠폰이 모두 소진되었습니다.');
+      if (c.startsAt && c.startsAt.toDate() > new Date()) throw new Error('아직 시작되지 않은 쿠폰입니다.');
       if (c.expiresAt && c.expiresAt.toDate() < new Date()) throw new Error('만료된 쿠폰입니다.');
 
       tx.update(couponRef, { usedCount: firebase.firestore.FieldValue.increment(1) });
@@ -60,6 +69,7 @@ const CouponService = {
         userId,
         couponTitle: c.title,
         discount: c.discount,
+        startsAt: c.startsAt || null,
         expiresAt: c.expiresAt || null,
         claimedAt: firebase.firestore.FieldValue.serverTimestamp(),
         usedAt: null,

@@ -268,10 +268,17 @@ const BusinessPage = {
                     <input class="form-input" id="coupon-count-input" type="number" min="1" placeholder="10">
                   </div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label">유효기간 (선택)</label>
-                  <input class="form-input" id="coupon-expires-input" type="date">
+                <div style="display:flex;gap:12px">
+                  <div class="form-group" style="flex:1">
+                    <label class="form-label">시작일</label>
+                    <input class="form-input" id="coupon-starts-input" type="date">
+                  </div>
+                  <div class="form-group" style="flex:1">
+                    <label class="form-label">종료일 (선택)</label>
+                    <input class="form-input" id="coupon-expires-input" type="date">
+                  </div>
                 </div>
+                <p class="editor-hint" style="margin-top:-8px;margin-bottom:12px">시작일을 비우면 오늘부터, 종료일을 비우면 기한 없이 사용할 수 있어요.</p>
                 <div style="display:flex;gap:8px">
                   <button type="button" class="btn btn--primary" onclick="BusinessPage.saveCoupon()" style="flex:1">저장</button>
                   <button type="button" class="btn btn--ghost" onclick="BusinessPage.hideCouponForm()" style="flex:1">취소</button>
@@ -642,7 +649,9 @@ const BusinessPage = {
     return this._coupons.map(c => {
       const remaining = c.totalCount - (c.usedCount || 0);
       const expired = c.expiresAt && c.expiresAt.toDate() < new Date();
+      const notStarted = c.startsAt && c.startsAt.toDate() > new Date();
       const dim = !c.isActive || expired;
+      const period = CouponService.periodText(c);
       return `
         <div style="border:1px solid var(--outline-variant);border-radius:12px;padding:14px;margin-bottom:10px;background:${dim ? 'var(--surface-dim)' : 'white'}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
@@ -651,10 +660,11 @@ const BusinessPage = {
               <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
                 <span style="background:var(--accent);color:white;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">${c.discount}% 할인</span>
                 <span style="font-size:0.8125rem;color:var(--secondary)">잔여 ${remaining}/${c.totalCount}장</span>
+                ${notStarted ? '<span style="font-size:0.75rem;color:#B36B00">시작 전</span>' : ''}
                 ${expired ? '<span style="font-size:0.75rem;color:var(--error)">만료</span>' : ''}
                 ${!c.isActive ? '<span style="font-size:0.75rem;color:var(--secondary)">비활성</span>' : ''}
               </div>
-              ${c.expiresAt ? `<div style="font-size:0.75rem;color:var(--secondary);margin-top:4px">~ ${c.expiresAt.toDate().toLocaleDateString('ko-KR')}</div>` : ''}
+              ${period ? `<div style="font-size:0.75rem;color:var(--secondary);margin-top:4px">${period}</div>` : ''}
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0">
               <button type="button" onclick="BusinessPage.toggleCoupon('${c.id}', ${!c.isActive})"
@@ -686,11 +696,13 @@ const BusinessPage = {
     const title = document.getElementById('coupon-title-input')?.value?.trim();
     const discount = parseInt(document.getElementById('coupon-discount-input')?.value);
     const totalCount = parseInt(document.getElementById('coupon-count-input')?.value);
+    const startsStr = document.getElementById('coupon-starts-input')?.value;
     const expiresStr = document.getElementById('coupon-expires-input')?.value;
 
     if (!title) { Toast.show('쿠폰 제목을 입력하세요.', 'error'); return; }
     if (!discount || discount < 1 || discount > 100) { Toast.show('할인율을 1~100 사이로 입력하세요.', 'error'); return; }
     if (!totalCount || totalCount < 1) { Toast.show('발행 매수를 입력하세요.', 'error'); return; }
+    if (startsStr && expiresStr && expiresStr < startsStr) { Toast.show('종료일이 시작일보다 빠릅니다.', 'error'); return; }
 
     const user = AuthService.getCurrentUser();
     const couponData = {
@@ -698,6 +710,7 @@ const BusinessPage = {
       storeName: this._store.name || '',
       ownerId: user?.id,
       title, discount, totalCount,
+      startsAt: startsStr ? firebase.firestore.Timestamp.fromDate(new Date(startsStr + 'T00:00:00')) : null,
       expiresAt: expiresStr ? firebase.firestore.Timestamp.fromDate(new Date(expiresStr + 'T23:59:59')) : null
     };
 

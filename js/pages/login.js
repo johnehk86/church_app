@@ -308,7 +308,7 @@ const LoginPage = {
               <div style="font-size:0.8125rem;color:var(--secondary);margin-bottom:2px">${Utils.escapeHtml(c.storeName || '')}</div>
               <div style="font-weight:600;font-size:0.9375rem;margin-bottom:6px">${Utils.escapeHtml(c.couponTitle || '')}</div>
               <span style="background:var(--accent);color:white;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">${c.discount}% 할인</span>
-              ${c.expiresAt ? `<span style="font-size:0.75rem;color:var(--secondary);margin-left:6px">~ ${c.expiresAt.toDate().toLocaleDateString('ko-KR')}</span>` : ''}
+              ${CouponService.periodText(c) ? `<span style="font-size:0.75rem;color:var(--secondary);margin-left:6px">${CouponService.periodText(c)}</span>` : ''}
             </div>
             <div style="flex-shrink:0">
               ${c.isUsed
