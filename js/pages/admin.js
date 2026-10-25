@@ -39,22 +39,65 @@ const AdminPage = {
       el.innerHTML = `<div class="empty-state"><span class="material-symbols-outlined" style="font-size:3rem;opacity:0.3">group</span><h3 class="empty-state__title">등록된 사용자가 없습니다</h3></div>`;
       return;
     }
+    const myId = AuthService.getCurrentUser()?.id;
+    const activeCount = users.filter(u => !u.removed).length;
     el.innerHTML = `
-      <p style="font-size:0.8125rem;color:var(--secondary);margin-bottom:12px">총 ${users.length}명</p>
-      ${users.map(user => `
-        <div class="user-list-item">
+      <p style="font-size:0.8125rem;color:var(--secondary);margin-bottom:12px">총 ${activeCount}명${activeCount < users.length ? ` · 탈퇴 처리 ${users.length - activeCount}명` : ''}</p>
+      ${users.map(user => {
+        const name = Utils.escapeHtml(user.name || '이름 없음');
+        const jsName = name.replace(/'/g, "\\'");
+        if (user.removed) {
+          return `
+        <div class="user-list-item" style="opacity:0.6">
           <div class="user-list-item__info">
-            <div class="user-list-item__name">${Utils.escapeHtml(user.name || '이름 없음')}</div>
+            <div class="user-list-item__name">${name} <span style="background:#FDECEC;color:#C62828;padding:2px 8px;border-radius:8px;font-size:0.6875rem;font-weight:700">탈퇴 처리됨</span></div>
             <div class="user-list-item__email">${Utils.escapeHtml(user.email || '')}</div>
           </div>
-          <select class="form-select" style="width:auto;padding:6px 32px 6px 10px;font-size:0.8125rem"
-                  onchange="AdminPage.changeRole('${user.id}', this.value)">
-            <option value="member" ${user.role === 'member' ? 'selected' : ''}>일반 성도</option>
-            <option value="business" ${user.role === 'business' ? 'selected' : ''}>사업자</option>
-            <option value="master" ${user.role === 'master' ? 'selected' : ''}>관리자</option>
-          </select>
-        </div>
-      `).join('')}`;
+          <button class="btn btn--secondary btn--small" style="width:auto" onclick="AdminPage.restoreUser('${user.id}', '${jsName}')">복구</button>
+        </div>`;
+        }
+        const canRemove = user.id !== myId && user.role !== 'master';
+        return `
+        <div class="user-list-item" style="flex-wrap:wrap;gap:8px">
+          <div class="user-list-item__info" style="min-width:0">
+            <div class="user-list-item__name">${name}</div>
+            <div class="user-list-item__email">${Utils.escapeHtml(user.email || '')}</div>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center">
+            <select class="form-select" style="width:auto;padding:6px 32px 6px 10px;font-size:0.8125rem"
+                    onchange="AdminPage.changeRole('${user.id}', this.value)">
+              <option value="member" ${user.role === 'member' ? 'selected' : ''}>일반 성도</option>
+              <option value="business" ${user.role === 'business' ? 'selected' : ''}>사업자</option>
+              <option value="master" ${user.role === 'master' ? 'selected' : ''}>관리자</option>
+            </select>
+            ${canRemove ? `<button class="btn btn--danger btn--small" style="width:auto;white-space:nowrap" onclick="AdminPage.removeUser('${user.id}', '${jsName}')">강제 탈퇴</button>` : ''}
+          </div>
+        </div>`;
+      }).join('')}`;
+  },
+
+  async removeUser(userId, name) {
+    if (!confirm(`"${name}" 회원을 강제 탈퇴시킬까요?\n\n· 이 회원의 매장과 쿠폰이 모두 삭제됩니다 (되돌릴 수 없음)\n· 이 계정으로는 더 이상 로그인할 수 없습니다`)) return;
+    try {
+      await AuthService.removeUser(userId);
+      Toast.show('탈퇴 처리되었습니다.', 'success');
+    } catch (e) {
+      console.error('강제 탈퇴 실패:', e);
+      Toast.show('탈퇴 처리에 실패했습니다.', 'error');
+    }
+    await this._loadUsers();
+  },
+
+  async restoreUser(userId, name) {
+    if (!confirm(`"${name}" 회원을 복구할까요?\n(일반 성도로 복구되며, 삭제된 매장·쿠폰은 돌아오지 않습니다)`)) return;
+    try {
+      await AuthService.restoreUser(userId);
+      Toast.show('복구되었습니다.', 'success');
+    } catch (e) {
+      console.error('복구 실패:', e);
+      Toast.show('복구에 실패했습니다.', 'error');
+    }
+    await this._loadUsers();
   },
 
   async _loadStores() {

@@ -13,8 +13,12 @@ service cloud.firestore {
         request.resource.data.role in ['member', 'business'];
       allow update: if request.auth != null &&
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master' ||
-         (request.auth.uid == userId && request.resource.data.role == resource.data.role));
-      allow delete: if request.auth != null && request.auth.uid == userId;
+         (request.auth.uid == userId &&
+          request.resource.data.role == resource.data.role &&
+          request.resource.data.get('removed', false) == resource.data.get('removed', false)));
+      // 강제 탈퇴된 회원은 문서를 지우고 재가입하는 우회 불가
+      allow delete: if request.auth != null && request.auth.uid == userId &&
+        resource.data.get('removed', false) == false;
     }
 
     // 쿠폰
@@ -38,7 +42,8 @@ service cloud.firestore {
          resource.data.userId == request.auth.uid ||
          resource.data.ownerId == request.auth.uid ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master');
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('removed', false) == false;
       allow update: if request.auth != null &&
         (resource.data.userId == request.auth.uid || resource.data.ownerId == request.auth.uid);
       allow delete: if false;

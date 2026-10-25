@@ -49,6 +49,12 @@ const AuthService = {
       const doc = await db.collection('users').doc(uid).get();
       const pending = this._pendingSignupRole;
       this._pendingSignupRole = null;
+      if (doc.exists && doc.data().removed) {
+        this._userData = null;
+        Toast.show('관리자에 의해 탈퇴 처리된 계정입니다.', 'error');
+        await auth.signOut();
+        return;
+      }
       if (doc.exists) {
         this._userData = doc.data();
         if (pending) Toast.show('이미 가입된 계정이에요. 로그인되었습니다.', 'info');
@@ -217,6 +223,29 @@ const AuthService = {
       console.error('역할 변경 실패:', e);
       Toast.show('역할 변경에 실패했습니다.', 'error');
     }
+  },
+
+  // --- 강제 탈퇴 / 복구 (마스터 전용) ---
+  // 로그인 계정 자체는 서버 함수 없이 지울 수 없어서, 데이터 삭제 + removed 표시로 재로그인 차단
+  async removeUser(userId) {
+    const [stores, coupons] = await Promise.all([
+      db.collection('stores').where('ownerId', '==', userId).get(),
+      db.collection('coupons').where('ownerId', '==', userId).get()
+    ]);
+    const batch = db.batch();
+    stores.docs.forEach(d => batch.delete(d.ref));
+    coupons.docs.forEach(d => batch.delete(d.ref));
+    batch.update(db.collection('users').doc(userId), {
+      removed: true,
+      role: 'member',
+      removedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await batch.commit();
+    StoreService._cache = null;
+  },
+
+  async restoreUser(userId) {
+    await db.collection('users').doc(userId).update({ removed: false });
   },
 
   // --- 전체 사용자 목록 (마스터 전용) ---
