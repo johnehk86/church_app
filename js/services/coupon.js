@@ -34,13 +34,16 @@ const CouponService = {
       .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
   },
 
-  // 매장별 활성 쿠폰 (회원용)
+  isUpcoming(c) {
+    return !!(c.startsAt && c.startsAt.toDate() > new Date());
+  },
+
+  // 매장별 노출 쿠폰 (회원용) - 시작 전 쿠폰도 '오픈 예정'으로 노출, 수령은 claim()에서 차단
   async getActiveByStore(storeId) {
     const all = await this.getByStore(storeId);
     const now = new Date();
     return all.filter(c => {
       if (!c.isActive) return false;
-      if (c.startsAt && c.startsAt.toDate() > now) return false;
       if (c.expiresAt && c.expiresAt.toDate() < now) return false;
       if (c.usedCount >= c.totalCount) return false;
       return true;

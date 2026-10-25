@@ -97,7 +97,12 @@ const DetailPage = {
             <div style="height:6px;background:var(--surface-dim);border-radius:3px;margin:12px 0;overflow:hidden">
               <div style="width:${Math.round(ratio * 100)}%;height:100%;background:${tone};border-radius:3px"></div>
             </div>
-            ${isClaimed
+            ${CouponService.isUpcoming(c)
+              ? `<div style="text-align:center;padding:12px;border-radius:12px;background:#FFF4E5;color:#B36B00;font-size:0.9375rem;font-weight:700">
+                   오픈 예정 · ${c.startsAt.toDate().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}부터 받기 가능
+                   <span style="margin-left:4px;background:#B36B00;color:white;padding:1px 8px;border-radius:10px;font-size:0.75rem">D-${Math.ceil((c.startsAt.toDate() - new Date()) / 86400000)}</span>
+                 </div>`
+              : isClaimed
               ? '<div style="text-align:center;padding:10px;border-radius:12px;background:var(--surface-dim);font-size:0.875rem;color:var(--secondary)">수령완료 · 내 정보 > 내 쿠폰에서 사용하세요</div>'
               : !user
                 ? `<button class="btn btn--secondary" onclick="App.navigate('#/login')">로그인하고 쿠폰 받기</button>`
