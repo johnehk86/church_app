@@ -6,7 +6,7 @@ const MapPage = {
   _markers: [],
 
   async render(container) {
-    const stores = await StoreService.getAll();
+    const stores = await StoreService.getPublic();
     const storesWithLocation = stores.filter(s => s.location?.lat && s.location?.lng);
 
     container.innerHTML = `
@@ -71,7 +71,7 @@ const MapPage = {
   },
 
   async openAllInNaver() {
-    const stores = (await StoreService.getAll()).filter(s => s.location?.lat && s.location?.lng);
+    const stores = (await StoreService.getPublic()).filter(s => s.location?.lat && s.location?.lng);
     if (!stores.length) return;
     let tLat = 0, tLng = 0;
     stores.forEach(s => { tLat += s.location.lat; tLng += s.location.lng; });

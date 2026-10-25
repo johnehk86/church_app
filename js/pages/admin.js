@@ -72,6 +72,9 @@ const AdminPage = {
         </div>`;
       return;
     }
+    const order = { pending: 0, active: 1, closed: 2 };
+    const sorted = [...stores].sort((a, b) => order[a.status || 'active'] - order[b.status || 'active']);
+    const pendingCount = stores.filter(s => s.status === 'pending').length;
     el.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <p style="font-size:0.8125rem;color:var(--secondary)">총 ${stores.length}개</p>
@@ -84,18 +87,45 @@ const AdminPage = {
           </button>
         </div>
       </div>
-      ${stores.map(store => `
-        <div class="user-list-item">
-          <div class="user-list-item__info" style="cursor:pointer" onclick="App.navigate('#/store/${store.id}')">
-            <div class="user-list-item__name"><span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">${Utils.categoryIcons[store.category] || 'storefront'}</span> ${Utils.escapeHtml(store.name)}</div>
+      ${pendingCount ? `<div style="background:#FFF4E5;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:0.875rem;font-weight:600;color:#B36B00">
+        <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle">notifications</span> 승인 대기 매장 ${pendingCount}개</div>` : ''}
+      ${sorted.map(store => {
+        const status = store.status || 'active';
+        const badge = {
+          pending: '<span style="background:#FFF4E5;color:#B36B00;padding:2px 8px;border-radius:8px;font-size:0.6875rem;font-weight:700">승인 대기</span>',
+          active:  '<span style="background:#E8F5E9;color:#2E7D32;padding:2px 8px;border-radius:8px;font-size:0.6875rem;font-weight:700">영업중</span>',
+          closed:  '<span style="background:#FDECEC;color:#C62828;padding:2px 8px;border-radius:8px;font-size:0.6875rem;font-weight:700">폐점</span>'
+        }[status];
+        const name = Utils.escapeHtml(store.name).replace(/'/g, "\\'");
+        const statusBtn = status === 'active'
+          ? `<button class="btn btn--secondary btn--small" style="width:auto" onclick="AdminPage.setStoreStatus('${store.id}', 'closed', '${name}')">폐점</button>`
+          : `<button class="btn btn--primary btn--small" style="width:auto" onclick="AdminPage.setStoreStatus('${store.id}', 'active', '${name}')">${status === 'pending' ? '승인' : '재개'}</button>`;
+        return `
+        <div class="user-list-item" style="flex-wrap:wrap;gap:8px">
+          <div class="user-list-item__info" style="cursor:pointer;min-width:0" onclick="App.navigate('#/store/${store.id}')">
+            <div class="user-list-item__name"><span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">${Utils.categoryIcons[store.category] || 'storefront'}</span> ${Utils.escapeHtml(store.name)} ${badge}</div>
             <div class="user-list-item__email">${Utils.escapeHtml(store.ownerName || '')} | ${Utils.escapeHtml(store.category || '')}</div>
           </div>
           <div style="display:flex;gap:4px">
-            <button class="btn btn--secondary btn--small" onclick="App.navigate('#/edit-store/${store.id}')">수정</button>
-            <button class="btn btn--danger btn--small" onclick="AdminPage.deleteStore('${store.id}', '${Utils.escapeHtml(store.name).replace(/'/g, "\\'")}')">삭제</button>
+            ${statusBtn}
+            <button class="btn btn--secondary btn--small" style="width:auto" onclick="App.navigate('#/edit-store/${store.id}')">수정</button>
+            <button class="btn btn--danger btn--small" style="width:auto" onclick="AdminPage.deleteStore('${store.id}', '${name}')">삭제</button>
           </div>
-        </div>
-      `).join('')}`;
+        </div>`;
+      }).join('')}`;
+  },
+
+  async setStoreStatus(storeId, status, storeName) {
+    const msg = { active: `"${storeName}" 매장을 공개(영업중)로 전환할까요?`, closed: `"${storeName}" 매장을 폐점 처리할까요?\n(데이터는 유지되고 목록에서만 숨겨집니다)` }[status];
+    if (!confirm(msg)) return;
+    try {
+      await StoreService.setStatus(storeId, status);
+      Toast.show(status === 'active' ? '매장이 공개되었습니다.' : '폐점 처리되었습니다.', 'success');
+      await this._loadStores();
+    } catch (e) {
+      console.error(e);
+      Toast.show('처리에 실패했습니다.', 'error');
+    }
   },
 
   async changeRole(userId, newRole) {

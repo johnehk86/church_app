@@ -10,7 +10,9 @@ const DetailPage = {
     if (!storeId) { App.navigate('#/'); return; }
 
     const store = await StoreService.getById(storeId);
-    if (!store) {
+    const viewer = AuthService.getCurrentUser();
+    const canSeeHidden = viewer && (viewer.id === store?.ownerId || AuthService.getUserRole() === 'master');
+    if (!store || (!StoreService.isOpen(store) && !canSeeHidden)) {
       container.innerHTML = `
         <div class="page empty-state">
           <span class="material-symbols-outlined" style="font-size:3rem;opacity:0.3">error</span>

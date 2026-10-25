@@ -23,14 +23,31 @@ const StoreService = {
     }
   },
 
+  // status 필드가 없는 기존 매장은 영업중으로 간주
+  isOpen(store) {
+    return !store.status || store.status === 'active';
+  },
+
+  async getPublic() {
+    return (await this.getAll()).filter(s => this.isOpen(s));
+  },
+
+  async setStatus(storeId, status) {
+    await db.collection('stores').doc(storeId).update({
+      status,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    this._cache = null;
+  },
+
   async getByCategory(category) {
-    const all = await this.getAll();
+    const all = await this.getPublic();
     if (!category || category === '전체') return all;
     return all.filter(s => s.category === category);
   },
 
   async search(query) {
-    const all = await this.getAll();
+    const all = await this.getPublic();
     const q = query.toLowerCase();
     return all.filter(s =>
       (s.name && s.name.toLowerCase().includes(q)) ||

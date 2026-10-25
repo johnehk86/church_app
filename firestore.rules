@@ -45,11 +45,15 @@ service cloud.firestore {
     // 매장
     match /stores/{storeId} {
       allow read: if true;
+      // 사업자는 승인 대기(pending)로만 생성 가능, 상태 변경은 관리자만
       allow create: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['business', 'master'];
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master' ||
+         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'business' &&
+          request.resource.data.status == 'pending'));
       allow update: if request.auth != null &&
-        (resource.data.ownerId == request.auth.uid ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master');
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master' ||
+         (resource.data.ownerId == request.auth.uid &&
+          request.resource.data.get('status', null) == resource.data.get('status', null)));
       allow delete: if request.auth != null &&
         (resource.data.ownerId == request.auth.uid ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master');

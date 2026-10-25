@@ -143,6 +143,17 @@ const BusinessPage = {
           ${this._isNew ? '매장 정보를 입력하고 등록하세요' : '매장 정보를 자유롭게 수정하세요'}
         </p>
 
+        ${s.status === 'pending' ? `
+        <div style="background:#FFF4E5;border-radius:12px;padding:14px 16px;margin-bottom:24px;display:flex;gap:10px;align-items:center">
+          <span class="material-symbols-outlined" style="color:#E08A00">hourglass_top</span>
+          <div style="font-size:0.875rem"><strong>승인 대기 중</strong><br><span style="color:var(--secondary)">관리자 승인 후 성도님들께 공개됩니다.</span></div>
+        </div>` : ''}
+        ${s.status === 'closed' ? `
+        <div style="background:#FDECEC;border-radius:12px;padding:14px 16px;margin-bottom:24px;display:flex;gap:10px;align-items:center">
+          <span class="material-symbols-outlined" style="color:#C62828">block</span>
+          <div style="font-size:0.875rem"><strong>폐점 처리된 매장</strong><br><span style="color:var(--secondary)">현재 공개되지 않습니다. 관리자에게 문의하세요.</span></div>
+        </div>` : ''}
+
         <form id="store-form" onsubmit="BusinessPage.onSubmit(event)">
 
           <!-- ===== 1. 기본 정보 ===== -->
@@ -604,8 +615,9 @@ const BusinessPage = {
       };
 
       if (this._isNew) {
-        await StoreService.create(storeData);
-        Toast.show('매장이 등록되었습니다!', 'success');
+        const isMaster = AuthService.getUserRole() === 'master';
+        await StoreService.create({ ...storeData, status: isMaster ? 'active' : 'pending' });
+        Toast.show(isMaster ? '매장이 등록되었습니다!' : '등록 신청 완료! 관리자 승인 후 공개됩니다.', 'success');
       } else {
         await StoreService.update(this._store.id, storeData);
         Toast.show('저장되었습니다!', 'success');
