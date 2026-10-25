@@ -1661,3 +1661,8 @@ input, textarea, select {
   box-shadow: -5px 0 0 var(--accent-light), 5px 0 0 var(--accent-light);
 }
 .flatpickr-day.today { border-color: var(--accent); }
+
+/* 카테고리 칩 꾹 눌러 옮기기 */
+.category-chip { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.category-chip--lifted { transform: scale(1.1); box-shadow: 0 6px 16px rgba(0,0,0,0.18); transition: transform 0.15s ease; }
+.category-chip--ghost { opacity: 0.35; }

@@ -87,10 +87,36 @@ const HomePage = {
     const el = document.getElementById('category-filter');
     if (!el) return;
     el.innerHTML = this._getOrderedCategories().map(cat => `
-        <button class="category-chip ${cat === this._selectedCategory ? 'category-chip--active' : ''}"
-                onclick="HomePage.filterByCategory('${cat}')">
+        <button class="category-chip ${cat === this._selectedCategory ? 'category-chip--active' : ''} ${cat === '전체' ? 'category-chip--fixed' : ''}"
+                data-cat="${cat}" onclick="HomePage.filterByCategory('${cat}')">
           ${cat}
         </button>`).join('');
+    this._enableChipDrag(el);
+  },
+
+  // 꾹 누르기(0.3초) 후에만 드래그 시작 → 그냥 좌우로 넘기는 스크롤과 구분
+  _enableChipDrag(el) {
+    if (typeof Sortable === 'undefined' || Sortable.get(el)) return;
+    Sortable.create(el, {
+      delay: 300,
+      touchStartThreshold: 6,
+      forceFallback: true,
+      fallbackTolerance: 3,
+      animation: 180,
+      filter: '.category-chip--fixed',
+      preventOnFilter: false,
+      chosenClass: 'category-chip--lifted',
+      ghostClass: 'category-chip--ghost',
+      onMove: (evt) => !evt.related.classList.contains('category-chip--fixed'),
+      onChoose: () => { try { navigator.vibrate?.(15); } catch (_) {} },
+      onEnd: (evt) => {
+        if (evt.oldIndex === evt.newIndex) return;
+        const order = [...el.querySelectorAll('[data-cat]')].map(b => b.dataset.cat).filter(c => c !== '전체');
+        try { localStorage.setItem('category-order', JSON.stringify(order)); } catch (_) {}
+        this._categoryOrder = ['전체', ...order];
+        Toast.show('순서를 저장했어요.', 'success');
+      }
+    });
   },
 
   // --- 순서 편집 (▲▼ 버튼 방식: 드래그는 좌우 스크롤과 겹쳐 어르신들께 어려움) ---
@@ -106,7 +132,7 @@ const HomePage = {
       <div style="background:var(--surface,#fff);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:85vh;display:flex;flex-direction:column">
         <div style="padding:20px 20px 8px">
           <h3 style="font-size:1.125rem;font-weight:700">카테고리 순서 바꾸기</h3>
-          <p style="font-size:0.8125rem;color:var(--secondary);margin-top:4px">▲▼ 버튼으로 자주 쓰는 카테고리를 위로 올려주세요. '전체'는 항상 맨 앞이에요.</p>
+          <p style="font-size:0.8125rem;color:var(--secondary);margin-top:4px">▲▼ 버튼으로 자주 쓰는 카테고리를 위로 올려주세요. '전체'는 항상 맨 앞이에요.<br>💡 홈 화면에서 카테고리를 <strong>꾹 누른 채 옆으로 끌어도</strong> 순서를 바꿀 수 있어요.</p>
         </div>
         <div id="category-order-list" style="overflow-y:auto;padding:4px 20px;flex:1"></div>
         <div style="padding:12px 20px 28px;display:flex;flex-direction:column;gap:8px">
